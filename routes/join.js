@@ -34,9 +34,16 @@ router.post('/', function(req, res, next) {
         res.send('회원가입 실패<br>원인: 해당 이메일이 이미 있습니다.');
       } else {
         // user join process
+
+        // password hashing
+        var crypto = require('crypto');
+        var salt = Math.round((new Date().valueOf() * Math.random())) + "";
+        var hashpass = crypto.createHash("sha512").update(req.body.pw+salt).digest("hex");
+
         new User({
           email: req.body.email,
-          pw: req.body.pw,
+          pw: hashpass,
+          salt: salt,
           gender: req.body.gender,
           age: req.body.age
         }).save();

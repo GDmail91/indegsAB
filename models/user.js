@@ -3,6 +3,7 @@ var userSchema = mongoose.Schema({
     user_id: String,
     email: String,
     pw: String,
+    salt: String,
     gender: String,
     age: Number,
     profile: { type: String, default: "" },
