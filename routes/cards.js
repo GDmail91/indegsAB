@@ -14,7 +14,8 @@ router.get('/', function(req, res, next) {
 /* POST card listing. */
 router.post('/', function(req, res, next) {
     // login check
-    if (!req.session.isLogin) {
+    console.log(req.session.userinfo.isLogin);
+    if (!req.session.userinfo.isLogin) {
         res.send('로그인이 필요합니다.');
     } else {
         var Card = require('../models/card.js');
@@ -27,9 +28,10 @@ router.post('/', function(req, res, next) {
             'title': req.body.title,
         };
 
-        Card.post(data, function (status, msg) {
+        Card.postCard(data, function (status, msg) {
             if (status) {
                 console.log('게시 완료');
+                // TODO mypage로 리다이렉트
                 res.send('게시 완료<br>상태: ' + msg);
             } else {
                 console.log(msg);
@@ -38,4 +40,22 @@ router.post('/', function(req, res, next) {
         });
     }
 });
+
+router.get('/:id', function(req, res, next) {
+    var Card = require('../models/card.js');
+    var data = {
+        'card_id': req.params.id
+    };
+
+    Card.getById(data, function(status, msg) {
+        if(status) {
+            console.log(msg);
+            res.send('게시물 결과<br> 결과: '+msg);
+        } else {
+            console.log('게시물 없음');
+            res.send('게시물 없음<br> 결과: '+msg);
+        }
+    })
+});
+
 module.exports = router;

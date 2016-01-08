@@ -6,6 +6,11 @@
 var express = require('express');
 var router = express.Router();
 
+/* GET user listing */
+router.get('/', function(req, res, next) {
+    res.render('auth/update', { title: 'Update Page' });
+});
+
 /* GET join listing. */
 router.get('/join', function(req, res, next) {
     res.render('auth/join', { title: 'Join Page' });
@@ -91,7 +96,7 @@ router.post('/login', function(req, res, next) {
                 isLogin: true,
                 username: result.name,
                 useremail: result.email
-            }
+            };
             // TODO redirecting
             res.send('로그인 성공 <br>로그인 이메일: '+result.email);
         } else {
@@ -100,6 +105,7 @@ router.post('/login', function(req, res, next) {
     });
 });
 
+/* POST logout listing. */
 router.post('/logout', function(req, res, next) {
     req.session.userinfo = {};
     res.send('로그아웃 완료');

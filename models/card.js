@@ -1,9 +1,10 @@
 var mongoose = require('mongoose');
-var async = require('async');
 var crypto = require('crypto');
+var autoIncrement = require('mongoose-auto-increment');
+
+autoIncrement.initialize(mongoose.connection);
 
 var cardSchema = mongoose.Schema({
-    card_id: { type: Number },
     imageA: { type: String, require: true },
     imageB: { type: String, require: true },
     title: { type: String, require: true },
@@ -12,9 +13,18 @@ var cardSchema = mongoose.Schema({
     postDate: { type: Date, default: Date.now },
 });
 
-//cardSchema.index({ user_id: 1 }, { unique: true });
+// set _id as number
+cardSchema.plugin(autoIncrement.plugin, 'Card');
 
-cardSchema.statics.post = function(data, done) {
+/*
+// after save process
+cardSchema.post('save', function(doc) {
+    console.log('삽입 완료: '+doc);
+});
+*/
+
+// posting card process
+cardSchema.statics.postCard = function(data, callback) {
     new Card({
         imageA: data.imageA,
         imageB: data.imageB,
@@ -22,13 +32,18 @@ cardSchema.statics.post = function(data, done) {
         useremail: data.useremail,
         author: data.author
     }).save(function(err) {
-        if (err) done(false, err);
-        else done(true, "success");
+        if (err) callback(false, err);
+        else callback(true, 'success');
+    });
+};
+
+// get card by id
+cardSchema.statics.getById = function(data, callback) {
+    Card.findById(data.card_id, function(err, result) {
+        callback(true, result);
     });
 };
 
 
 var Card = mongoose.model('Card', cardSchema);
-
-
 module.exports = Card;

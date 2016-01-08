@@ -16,8 +16,10 @@ var userSchema = mongoose.Schema({
 
 userSchema.index({ email: 1 }, { unique: true });
 
+
+
 // Email registration process
-userSchema.statics.joinCheck = function(data, done) {
+userSchema.statics.joinCheck = function(data, callback) {
     async.waterfall([
             function(callback){   // 중복검사
                 User.findOne({'email':data.email},function(err,result){
@@ -50,8 +52,8 @@ userSchema.statics.joinCheck = function(data, done) {
             }
         ],
         function(err){
-            if(err) done(false, "회원가입 에러");  // error
-            else done(true, "success");  // success
+            if(err) callback(false, "회원가입 에러");  // error
+            else callback(true, "success");  // success
         }
     );
 };
