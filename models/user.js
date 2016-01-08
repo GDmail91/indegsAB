@@ -16,12 +16,23 @@ var userSchema = mongoose.Schema({
 
 userSchema.index({ email: 1 }, { unique: true });
 
-
+// User info getter
+userSchema.statics.getByName = function(data, done) {
+    User.findOne({'name':data.name}, function(err, result) {
+        if (err) {
+            console.err(err);
+            done(false, '사용자 검색 에러');
+        } else {
+            if(result) done(true, result);
+            else done(false, '사용자 없음');
+        }
+    });
+};
 
 // Email registration process
-userSchema.statics.joinCheck = function(data, callback) {
+userSchema.statics.joinCheck = function(data, done) {
     async.waterfall([
-            function(callback){   // 중복검사
+            function(callback){   // email 중복검사
                 User.findOne({'email':data.email},function(err,result){
                     if (err) {
                         console.err(err);
@@ -32,6 +43,18 @@ userSchema.statics.joinCheck = function(data, callback) {
                         callback(null);
                     }
                 });
+            },
+            function(callback) {    // nickname 중복 검사
+                User.findOne({'name':data.name}, function(err, result) {
+                    if(err) {
+                        console.err(err);
+                        callback(err);
+                    } else if (result) {
+                        done(false, '닉네임 중복 에러');
+                    } else {
+                        callback(null);
+                    }
+                })
             },
             function(callback){  // 가입
                 // user join process
@@ -52,12 +75,11 @@ userSchema.statics.joinCheck = function(data, callback) {
             }
         ],
         function(err){
-            if(err) callback(false, "회원가입 에러");  // error
-            else callback(true, "success");  // success
+            if(err) done(false, "회원가입 에러");  // error
+            else done(true, "success");  // success
         }
     );
 };
-
 
 var User = mongoose.model('User', userSchema);
 

@@ -7,8 +7,18 @@ var express = require('express');
 var router = express.Router();
 
 /* GET user listing */
-router.get('/', function(req, res, next) {
-    res.render('auth/update', { title: 'Update Page' });
+router.get('/:username', function(req, res, next) {
+    var User = require('../models/user.js');
+    var data = {
+      'name': req.params.username
+    };
+    User.getByName(data, function(status, msg) {
+       if (status) {
+           res.send('사용자 검색 결과<br>결과: '+msg);
+       } else {
+           res.send('사용자 검색 실패<br>결과: '+msg);
+       }
+    });
 });
 
 /* GET join listing. */
