@@ -45,10 +45,25 @@ switch(app.get('env')){
     throw new Error('Unknown execution environment: ' + app.get('env'));
 }
 
+// session configuration
+var MongoSessionStore = require('session-mongoose')(require('connect'));
+var sessionStore = new MongoSessionStore({
+  url: credentials.mongo[app.get('env')].connectionString
+});
+var expressSession = require('express-session');
+app.use(expressSession({
+  resave: false,
+  saveUninitialized: false,
+  secret: credentials.cookieSecret,
+  store: sessionStore
+}));
+
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
 
 // add routes
 require('./routes.js')(app);
