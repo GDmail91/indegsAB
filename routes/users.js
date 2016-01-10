@@ -10,7 +10,7 @@ var router = express.Router();
 router.get('/:username', function(req, res, next) {
     var User = require('../models/user.js');
     var data = {
-      'name': req.params.username
+      'username': req.params.username
     };
     User.getByName(data, function(status, msg) {
        if (status) {
@@ -18,6 +18,21 @@ router.get('/:username', function(req, res, next) {
        } else {
            res.send('사용자 검색 실패<br>결과: '+msg);
        }
+    });
+});
+
+/* GET user by email listing */
+router.get('/:useremail', function(req, res, next) {
+    var User = require('../models/user.js');
+    var data = {
+        'useremail': req.params.useremail
+    };
+    User.getByEmail(data, function(status, msg) {
+        if (status) {
+            res.send('사용자 검색 결과<br>결과: '+msg);
+        } else {
+            res.send('사용자 검색 실패<br>결과: '+msg);
+        }
     });
 });
 

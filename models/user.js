@@ -7,7 +7,7 @@ var userSchema = mongoose.Schema({
     email: { type: String, require: true },
     pw: { type: String, require: true },
     salt: { type: String, require: true },
-    name: { type: String, require: true },
+    username: { type: String, require: true },
     gender: { type: String, require: true },
     age: { type: Number, require: true },
     profile: { type: String, default: "" },
@@ -18,7 +18,20 @@ userSchema.index({ email: 1 }, { unique: true });
 
 // User info getter
 userSchema.statics.getByName = function(data, done) {
-    User.findOne({'name':data.name}, function(err, result) {
+    User.findOne({'username':data.username}, function(err, result) {
+        if (err) {
+            console.err(err);
+            done(false, '사용자 검색 에러');
+        } else {
+            if(result) done(true, result);
+            else done(false, '사용자 없음');
+        }
+    });
+};
+
+// User info getter
+userSchema.statics.getByEmail = function(data, done) {
+    User.findOne({'useremail':data.useremail}, function(err, result) {
         if (err) {
             console.err(err);
             done(false, '사용자 검색 에러');
@@ -45,7 +58,7 @@ userSchema.statics.joinCheck = function(data, done) {
                 });
             },
             function(callback) {    // nickname 중복 검사
-                User.findOne({'name':data.name}, function(err, result) {
+                User.findOne({'username':data.username}, function(err, result) {
                     if(err) {
                         console.err(err);
                         callback(err);
@@ -66,7 +79,7 @@ userSchema.statics.joinCheck = function(data, done) {
                     email: data.email,
                     pw: hashpass,
                     salt: salt,
-                    name: data.name,
+                    username: data.username,
                     gender: data.gender,
                     age: data.age
                 }).save();
