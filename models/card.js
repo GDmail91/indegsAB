@@ -69,10 +69,11 @@ cardSchema.statics.postLikeCard = function(data, callback) {
     // var User= require('./user');
     var Like = require('./like');
 
+    // Like Collection에 사용자 아이디와 게시물 아이디 추가
     Like.postLike(data, function(status, msg) {
-
+        // Card에 좋아요 수 증가
+        // TODO waterfall 로 작성할 것
         if(status) {
-            //callback(true, msg);
             Card.getById({ card_id: data.card_id }, function(status, msg) {
                 if (status) {
                     if (msg.like) msg.like += 1;
@@ -80,10 +81,10 @@ cardSchema.statics.postLikeCard = function(data, callback) {
 
                     Card.findOneAndUpdate({ _id: data.card_id }, { like:msg.like }, { upsert: true, new: true}, function(err, result) {
                         if (err) callback(err);
-                        console.log(result);
-                        callback(true, result);
+                        else callback(true, result);
                     });
-
+                } else {
+                    callback(false, msg);
                 }
             });
         } else {
