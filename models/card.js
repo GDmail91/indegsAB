@@ -64,52 +64,126 @@ cardSchema.statics.getById = function(data, callback) {
 
 
 // choose card
-// TODO need like model
 cardSchema.statics.postLikeCard = function(data, callback) {
-    // var User= require('./user');
     var Like = require('./like');
+    var Image = require('./image');
 
     // Like Collection에 사용자 아이디와 게시물 아이디 추가
     Like.postLike(data, function(status, msg) {
-        // Card에 좋아요 수 증가
+        console.log(msg);
+        // Image에 좋아요 수 증가
         // TODO waterfall 로 작성할 것
         if(status) {
-            // Count Control
-            function likeCountControl(card_id, like) {
-                Card.findOneAndUpdate({ _id: card_id }, { like:like }, { upsert: true, new: true}, function(err, result) {
-                    if (err) callback(err);
-                    else callback(true, result);
-                });
-            }
-            switch (msg) {
-                case 'plus':
-                    Card.getById({ card_id: data.card_id }, function(status, msg) {
-                        if (status) {
-                            if (msg.like) msg.like += 1;
-                            else msg.like = 0;
-                            likeCountControl(data.card_id, msg.like);
-                        } else {
-                            callback(false, msg);
-                        }
-                    });
-                    break;
+            Image.getById({ image_id: data.image_id }, function(status, image) {
 
-                case 'cancel':
-                    Card.getById({ card_id: data.card_id }, function(status, msg) {
-                        if (status) {
-                            if (msg.like) msg.like -= 1;
-                            else msg.like = 0;
-                            likeCountControl(data.card_id, msg.like);
-                        } else {
-                            callback(false, msg);
-                        }
+                if (status) {
+                    var liker = [];
+                    switch (msg) {
+                        case 'plus': // increase process
+                            image.like += 1;
+                            liker = data.username;
+                            break;
+                        case 'cancel': // decrease process
+                            if (image.like || image.like > 0) image.like -= 1;
+                            else {
+                                image.like = 0;
+                            }
+                            Image.findById(data.image_id, function(err, result) {
+                                if(err) callback(err);
+                                // liker remove
+                                liker = result.liker.remove(data.username);
+                            });
+                            break;
+                    }
+                    Image.findOneAndUpdate({ _id: data.image_id }, { like: image.like, liker: liker }, { upsert: true, new: true}, function(err, result) {
+                        if (err) callback(err);
+                        else callback(true, result);
                     });
-                    break;
-                default:
-                    callback(false, msg);
-            }
+                } else {
+                    callback(false, image);
+                }
+            });
         } else {
             callback(false, msg);
+        }
+    });
+};
+
+
+// create text vote
+cardSchema.statics.postVoteCard = function(data, callback) {
+    var Like = require('./like');
+    Like.getLike({
+        card_id: data.card_id,
+        image_id: data.image_id,
+        useremail: data.useremail
+    }, function(status, result) {
+        if(status) {
+            var Image = require('./image');
+            Image.getById({ image_id: data.image_id }, function(status, image) {
+                if (status) {
+                    var liker = image.text_vote;
+
+                    // 같은글이 올라가있는 경우
+                    if (image.text_vote[data.vote_title]) callback(false, 'Already posted');
+                    else {
+                        liker.push({ vote_title: data.vote_title, vote_owner: data.username, vote_count: 1, vote_member: [data.username] });
+
+                        Image.findOneAndUpdate({ _id: data.image_id }, { text_vote: liker }, { upsert: true, new: true}, function(err, result) {
+                            if (err) callback(err);
+                            else callback(true, result);
+                        });
+                    }
+                } else {
+                    callback(false, image);
+                }
+            });
+        } else {
+            callback(false, 'Need set like');
+        }
+    });
+};
+
+// plus like into text vote
+cardSchema.statics.putVoteLike = function(data, callback) {
+    var Like = require('./like');
+    Like.getLike({
+        card_id: data.card_id,
+        image_id: data.image_id,
+        useremail: data.useremail
+    }, function(status, result) {
+        if(status) {
+            var Image = require('./image');
+            Image.getById({ image_id: data.image_id }, function(status, image) {
+                if (status) {
+                    // 해당이름의 Vote 검색
+                    image.text_vote.filter(function(text_vote) {
+                        if(text_vote.vote_title == data.vote_title) {
+                            // 투표 눌렀는지 확인
+                            if(text_vote.vote_member == data.username) {
+                                // 눌렀을경우 투표 취소
+                                text_vote.vote_member.pop(data.username);
+                                text_vote.vote_count -= 1;
+                            } else {
+                                // 안눌렀을 경우 투표
+                                text_vote.vote_member.push(data.username);
+                                text_vote.vote_count += 1;
+                            }
+
+                            Image.findOneAndUpdate({ _id: data.image_id }, { text_vote: text_vote }, { upsert: true, new: true}, function(err, result) {
+                                if (err) callback(err);
+                                else callback(true, result);
+                            });
+                        } else {
+                            callback(false, 'Vote title isn`t exist');
+                        }
+                    });
+                } else {
+                    callback(false, image);
+                }
+            });
+        } else {
+            callback(false, 'Need set like');
         }
     });
 };

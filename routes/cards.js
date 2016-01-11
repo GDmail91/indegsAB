@@ -101,7 +101,6 @@ router.post('/:card_id/images', function(req, res, next) {
 /* POST card listing. */
 router.post('/', function(req, res, next) {
     // login check
-    //console.log(req.session.userinfo.isLogin);
     if (!req.session.userinfo.isLogin) {
         res.send('로그인이 필요합니다.');
     } else {
@@ -152,7 +151,6 @@ router.post('/choose/:card_id/:image_id', function(req, res, next) {
     } else {
         var Card = require('../models/card.js');
 
-        // TODO need image id
         var data = {
             'card_id': req.params.card_id,
             'useremail': req.session.userinfo.useremail,
@@ -161,11 +159,62 @@ router.post('/choose/:card_id/:image_id', function(req, res, next) {
         };
 
         Card.postLikeCard(data, function(status, msg) {
+            if (status)
+                res.send('좋아요 누름 : '+msg);
+            else
+                res.send('에러 : '+msg);
+        });
+    }
+});
+
+/* POST new vote card */
+router.post('/vote/:card_id/:image_id', function(req, res, next) {
+    // login check
+    if (!req.session.userinfo.isLogin) {
+        res.send('로그인이 필요합니다.');
+    } else {
+        var Card = require('../models/card.js');
+
+        var data = {
+            'card_id': req.params.card_id,
+            'useremail': req.session.userinfo.useremail,
+            'username': req.session.userinfo.username,
+            'image_id': req.params.image_id,
+            'vote_title': req.body.vote_title,
+        };
+
+        Card.postVoteCard(data, function(status, msg) {
             if (status) console.log('성공');
             else console.log('에러');
 
             //console.log(msg);
-            res.send('좋아요 누름 : '+msg);
+            res.send('Vote 작성 : '+msg);
+        });
+    }
+});
+
+/* PUT vote card */
+router.put('/vote/:card_id/:image_id', function(req, res, next) {
+    // login check
+    if (!req.session.userinfo.isLogin) {
+        res.send('로그인이 필요합니다.');
+    } else {
+        var Card = require('../models/card.js');
+
+        var data = {
+            'card_id': req.params.card_id,
+            'useremail': req.session.userinfo.useremail,
+            'username': req.session.userinfo.username,
+            'image_id': req.params.image_id,
+            'vote_title': req.body.vote_title
+        };
+
+        Card.putVoteLike(data, function(status, msg) {
+            if (status) console.log('성공');
+            else console.log('에러');
+
+            //console.log(msg);
+            res.send('Vote 누름 : '+msg);
         });
     }
 });
