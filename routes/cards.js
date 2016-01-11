@@ -26,7 +26,7 @@ router.get('/', function(req, res, next) {
 });
 
 /* POST image listing. */
-router.post('/images', function(req, res, next) {
+router.post('/:card_id/images', function(req, res, next) {
     // login check
     if (!req.session.userinfo.isLogin) {
         res.send('로그인이 필요합니다.');
@@ -79,7 +79,18 @@ router.post('/images', function(req, res, next) {
                     if (err) {
                         throw err;
                     }
-                    res.send('사진업로드 성공<br>위치: '+keyName);
+                    var Image = require('../models/image.js');
+
+                    var data = {
+                        image_url: keyName,
+                        linked_card: req.params.card_id,
+                        author: req.session.userinfo.username,
+                    };
+                    Image.postImage(data, function(status, msg) {
+                        if(status) {
+                            res.send('성공 <br>사진id: '+msg._id);
+                        } else res.send('실패');
+                    });
                 });
             });
         });
