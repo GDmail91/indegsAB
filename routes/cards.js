@@ -14,7 +14,7 @@ router.get('/', function(req, res, next) {
     var data = {
         'startId': req.query.startId,
         'term': req.query.term
-    }
+    };
     Card.getMainCard(data, function (status, msg) {
         if (status) {
             res.send('카드 목록<br>목록: ' + msg);
@@ -24,6 +24,68 @@ router.get('/', function(req, res, next) {
         }
     });
 });
+
+/* POST image listing. */
+router.post('/images', function(req, res, next) {
+    // login check
+    if (!req.session.userinfo.isLogin) {
+        res.send('로그인이 필요합니다.');
+    } else {
+        var AWS = require('aws-sdk');
+        var fs = require('fs');
+
+        var formidable = require('formidable');
+
+        // GET FILE info
+        var form = new formidable.IncomingForm();
+
+        form.parse(req, function(err, fields, files) {
+            if (err) return res.redirect(303, '/error');
+            if (err) {
+                res.session.flash = {
+                    type: 'danger',
+                    intro: 'Oops!',
+                    message: 'There was an error processing your submission. ' +
+                    'Pelase try again.',
+                };
+                return res.redirect(303, '/contest/vacation-photo');
+            }
+
+            // Read in the file, convert it to base64, store to S3
+            var fileStream = fs.createReadStream(files.somefile.path);
+            fileStream.on('error', function (err) {
+                if (err) {
+                    throw err;
+                }
+            });
+            fileStream.on('open', function () {
+                AWS.config.region = 'ap-northeast-2';
+                var s3 = new AWS.S3();
+
+                // image name hashing
+                var crypto = require('crypto');
+                var salt = Math.round((new Date().valueOf() * Math.random())) + "";
+                var image_name = crypto.createHash("sha256").update(files.somefile.name + salt).digest("hex");
+
+                // bucket info & file info
+                var bucketName = 'indegs-image-storage';
+                var keyName = 'images/'+image_name;
+
+                s3.putObject({
+                    Bucket: bucketName,
+                    Key: keyName,
+                    Body: fileStream
+                }, function (err) {
+                    if (err) {
+                        throw err;
+                    }
+                    res.send('사진업로드 성공<br>위치: '+keyName);
+                });
+            });
+        });
+    }
+});
+
 
 /* POST card listing. */
 router.post('/', function(req, res, next) {
@@ -73,23 +135,28 @@ router.get('/:card_id', function(req, res, next) {
 
 /* POST choose card */
 router.post('/choose/:card_id/:image_id', function(req, res, next) {
-    var Card = require('../models/card.js');
+    // login check
+    if (!req.session.userinfo.isLogin) {
+        res.send('로그인이 필요합니다.');
+    } else {
+        var Card = require('../models/card.js');
 
-    // TODO need image id
-    var data = {
-        'card_id': req.params.card_id,
-        'useremail': req.session.userinfo.useremail,
-        'username': req.session.userinfo.username,
-        'image_id': req.params.image_id
-    };
+        // TODO need image id
+        var data = {
+            'card_id': req.params.card_id,
+            'useremail': req.session.userinfo.useremail,
+            'username': req.session.userinfo.username,
+            'image_id': req.params.image_id
+        };
 
-    Card.postLikeCard(data, function(status, msg) {
-        if (status) console.log('성공');
-        else console.log('에러');
+        Card.postLikeCard(data, function(status, msg) {
+            if (status) console.log('성공');
+            else console.log('에러');
 
-        //console.log(msg);
-        res.send('좋아요 누름 : '+msg);
-    });
+            //console.log(msg);
+            res.send('좋아요 누름 : '+msg);
+        });
+    }
 });
 
 module.exports = router;
