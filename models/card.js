@@ -74,19 +74,40 @@ cardSchema.statics.postLikeCard = function(data, callback) {
         // Card에 좋아요 수 증가
         // TODO waterfall 로 작성할 것
         if(status) {
-            Card.getById({ card_id: data.card_id }, function(status, msg) {
-                if (status) {
-                    if (msg.like) msg.like += 1;
-                    else msg.like = 1;
-
-                    Card.findOneAndUpdate({ _id: data.card_id }, { like:msg.like }, { upsert: true, new: true}, function(err, result) {
-                        if (err) callback(err);
-                        else callback(true, result);
+            // Count Control
+            function likeCountControl(card_id, like) {
+                Card.findOneAndUpdate({ _id: card_id }, { like:like }, { upsert: true, new: true}, function(err, result) {
+                    if (err) callback(err);
+                    else callback(true, result);
+                });
+            }
+            switch (msg) {
+                case 'plus':
+                    Card.getById({ card_id: data.card_id }, function(status, msg) {
+                        if (status) {
+                            if (msg.like) msg.like += 1;
+                            else msg.like = 0;
+                            likeCountControl(data.card_id, msg.like);
+                        } else {
+                            callback(false, msg);
+                        }
                     });
-                } else {
+                    break;
+
+                case 'cancel':
+                    Card.getById({ card_id: data.card_id }, function(status, msg) {
+                        if (status) {
+                            if (msg.like) msg.like -= 1;
+                            else msg.like = 0;
+                            likeCountControl(data.card_id, msg.like);
+                        } else {
+                            callback(false, msg);
+                        }
+                    });
+                    break;
+                default:
                     callback(false, msg);
-                }
-            });
+            }
         } else {
             callback(false, msg);
         }

@@ -4,30 +4,40 @@ var crypto = require('crypto');
 var likeSchema = mongoose.Schema({
     card_id: { type: Number, require: true },
     image_id: { type: String, require: true },
-    user_id: {type: String, require: true },
+    useremail: {type: String, require: true },
 });
 
 // posting like process
 likeSchema.statics.postLike = function(data, callback) {
-    new Like({
-        card_id: data.card_id,
-        image_id: data.image_id,
-        useremail: data.useremail,
-    }).save(function(err) {
-        if (err) callback(false, err);
-        else callback(true, 'success');
+    Like.getLikeByCard(data.card_id, function(status, msg) {
+       if (status) {
+           // 좋아요 취소
+           Like.find({ card_id: data.card_id, image_id: data.image_id, useremail: data.useremail }).remove().exec(function(err, data) {
+               callback(true, 'cancel');
+           });
+       } else {
+           // 좋아요 취소
+           new Like({
+               card_id: data.card_id,
+               image_id: data.image_id,
+               useremail: data.useremail,
+           }).save(function(err) {
+               if (err) callback(false, err);
+               else callback(true, 'plus');
+           });
+       }
     });
 };
 
 // get count of like by card
 likeSchema.statics.getLikeByCard = function(data, callback) {
-    Like.find({ card_id: data.card_id }, function(err, result) {
+    Like.find({ card_id: data }, function(err, result) {
         if (err) {
             console.err(err);
             done(false, '좋아요 검색 에러');
         } else {
-            if(result) callback(true, result);
-            else callback(false, '사용자 없음');
+            if(result.length == 0) callback(false, '사용자 없음');
+            else callback(true, result);
         }
     });
 };
