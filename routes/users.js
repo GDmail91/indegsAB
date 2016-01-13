@@ -12,11 +12,11 @@ router.get('/:username', function(req, res, next) {
     var data = {
       'username': req.params.username
     };
-    User.getByName(data, function(status, msg) {
+    User.getByName(data, function(status, data) {
        if (status) {
-           res.send('사용자 검색 결과<br>결과: '+msg);
+           res.send({ status: true, msg: '사용자 검색 성공', data: data });
        } else {
-           res.send('사용자 검색 실패<br>결과: '+msg);
+           res.send({ status: false, msg: '사용자 검색 실패', data: data });
        }
     });
 });
@@ -27,18 +27,13 @@ router.get('/:useremail', function(req, res, next) {
     var data = {
         'useremail': req.params.useremail
     };
-    User.getByEmail(data, function(status, msg) {
+    User.getByEmail(data, function(status, data) {
         if (status) {
-            res.send('사용자 검색 결과<br>결과: '+msg);
+            res.send({ status: true, msg: '사용자 검색 성공', data: data });
         } else {
-            res.send('사용자 검색 실패<br>결과: '+msg);
+            res.send({ status: false, msg: '사용자 검색 실패', data: data });
         }
     });
-});
-
-/* GET join listing. */
-router.get('/join', function(req, res, next) {
-    res.render('auth/join', { title: 'Join Page' });
 });
 
 /* POST join listing. */
@@ -49,7 +44,7 @@ router.post('/join', function(req, res, next) {
         'email': req.body.email,
         'pw': req.body.pw,
         'pw_confirm': req.body.pw_confirm,
-        'name': req.body.name,
+        'username': req.body.name,
         'age': req.body.age,
         'gender': req.body.gender
     };
@@ -59,17 +54,16 @@ router.post('/join', function(req, res, next) {
     if(Validator.isEmail(data.email)  // email check
         && Validator.equals(data.pw, data.pw_confirm) // password confirm
         && Validator.isNumeric(data.age)  // number only
-        && Validator.isAlpha  // charator only
+        && Validator.isAlpha(data.username)  // charator only
         && (Validator.equals(data.gender, 'male') || Validator.equals(data.gender, 'female'))) {
 
         // Email registration
         User.joinCheck(data, function(status, msg) {
             if (status) {
-                res.send('회원가입 성공.<br>가입 이메일: '+data.email);
+                res.send({ status: true, msg: '회원가입 성공', data: data.email });
             } else {
                 // TODO backward process
-                console.log('해당 이메일이 이미 있습니다.');
-                res.send('회원가입 실패<br>원인: '+msg);
+                res.send({ status: false, msg: '회원가입 실패', data: msg });
             }
         });
 
@@ -78,11 +72,11 @@ router.post('/join', function(req, res, next) {
         console.log('유효성 검사 실패.');
         console.log('이메일: '+Validator.isEmail(data.email));
         console.log('비번: '+Validator.equals(data.pw, data.pw_confirm));
-        console.log('이름: '+Validator.isNumeric(data.name));
+        console.log('이름: '+Validator.isNumeric(data.username));
         console.log('나이: '+Validator.isNumeric(data.age));
         console.log('성별: '+(Validator.equals(data.gender, 'male') || Validator.equals(data.gender, 'female')));
 
-        res.send('회원가입 실패<br>원인: 유효성 검사결과');
+        res.send({ status: false, msg: '회원가입 실패', data: '유효성 검사 실패' });
     }
 });
 
@@ -114,26 +108,31 @@ router.post('/login', function(req, res, next) {
             throw err;
         }
 
-        // Email check
-        var crypto = require('crypto');
-        if (result.pw == crypto.createHash("sha512").update(req.body.pw+result.salt).digest("hex")) {
-            req.session.userinfo = {
-                isLogin: true,
-                username: result.name,
-                useremail: result.email
-            };
-            // TODO redirecting
-            res.send('로그인 성공 <br>로그인 이메일: '+result.email);
+        if (result) {
+            // Email check
+            var crypto = require('crypto');
+            if (result.pw == crypto.createHash("sha512").update(req.body.pw+result.salt).digest("hex")) {
+                req.session.userinfo = {
+                    isLogin: true,
+                    username: result.username,
+                    useremail: result.email
+                };
+                // TODO redirecting
+                res.send({ status: true, msg: '로그인 성공', data: result.email });
+            } else {
+                res.send({ status: false, msg: '로그인 실패', data: '비밀번호 오류' });
+            }
         } else {
-            res.send('로그인 실패 <br>원인: 비밀번호 또는 이메일을 확인');
+            res.send({ status: false, msg: '로그인 실패', data: '계정없음' });
         }
+
     });
 });
 
 /* POST logout listing. */
 router.post('/logout', function(req, res, next) {
     req.session.userinfo = {};
-    res.send('로그아웃 완료');
+    res.send({ status: true, msg: '로그아웃 완료' });
 });
 
 module.exports = router;

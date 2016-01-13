@@ -59,11 +59,12 @@ userSchema.statics.joinCheck = function(data, done) {
             },
             function(callback) {    // nickname 중복 검사
                 User.findOne({'username':data.username}, function(err, result) {
+                    console.log(result);
                     if(err) {
                         console.err(err);
                         callback(err);
                     } else if (result) {
-                        done(false, '닉네임 중복 에러');
+                        if (result.length == 0) done(false, '닉네임 중복 에러');
                     } else {
                         callback(null);
                     }

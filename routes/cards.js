@@ -15,12 +15,12 @@ router.get('/', function(req, res, next) {
         'startId': req.query.startId,
         'term': req.query.term
     };
-    Card.getMainCard(data, function (status, msg) {
+    Card.getMainCard(data, function (status, data) {
         if (status) {
-            res.send('카드 목록<br>목록: ' + msg);
+            res.send({ status: true, msg: '카드목록 불러오기 성공', data: data });
         } else {
-            console.log(msg);
-            res.send('로딩 실패<br>상태: ' + msg);
+            console.log(data);
+            res.send({ status: false, msg: '카드목록 불러오기 실패', data: data });
         }
     });
 });
@@ -29,7 +29,7 @@ router.get('/', function(req, res, next) {
 router.post('/:card_id/images', function(req, res, next) {
     // login check
     if (!req.session.userinfo.isLogin) {
-        res.send('로그인이 필요합니다.');
+        res.send({ status: false, msg: '로그인이 필요합니다.' });
     } else {
         var AWS = require('aws-sdk');
         var fs = require('fs');
@@ -41,15 +41,6 @@ router.post('/:card_id/images', function(req, res, next) {
 
         form.parse(req, function(err, fields, files) {
             if (err) return res.redirect(303, '/error');
-            if (err) {
-                res.session.flash = {
-                    type: 'danger',
-                    intro: 'Oops!',
-                    message: 'There was an error processing your submission. ' +
-                    'Pelase try again.',
-                };
-                return res.redirect(303, '/contest/vacation-photo');
-            }
 
             // Read in the file, convert it to base64, store to S3
             var fileStream = fs.createReadStream(files.somefile.path);
@@ -88,8 +79,8 @@ router.post('/:card_id/images', function(req, res, next) {
                     };
                     Image.postImage(data, function(status, msg) {
                         if(status) {
-                            res.send('성공 <br>사진id: '+msg._id);
-                        } else res.send('실패');
+                            res.send({ status: true, msg: '업로드 성공', data: msg._id });
+                        } else res.send({ status: false, msg: '업로드 실패' });
                     });
                 });
             });
@@ -102,7 +93,7 @@ router.post('/:card_id/images', function(req, res, next) {
 router.post('/', function(req, res, next) {
     // login check
     if (!req.session.userinfo.isLogin) {
-        res.send('로그인이 필요합니다.');
+        res.send({ status: false, msg: '로그인이 필요합니다.' });
     } else {
         var Card = require('../models/card.js');
 
@@ -118,10 +109,10 @@ router.post('/', function(req, res, next) {
             if (status) {
                 console.log('게시 완료');
                 // TODO mypage로 리다이렉트
-                res.send('게시 완료<br>상태: ' + msg);
+                res.send({ status: true, msg: '게시 완료', data: msg });
             } else {
                 console.log(msg);
-                res.send('게시 실패<br>상태: ' + msg);
+                res.send({ status: false, msg: '게시 실패', data: msg });
             }
         });
     }
@@ -136,18 +127,73 @@ router.get('/:card_id', function(req, res, next) {
 
     Card.getById(data, function(status, msg) {
         if(status) {
-            res.send('게시물 결과<br> 결과: '+msg);
+            res.send({ status: true, msg: '카드 불러오기 성공', data: msg });
         } else {
-            res.send('게시물 없음<br> 결과: '+msg);
+            res.send({ status: false, msg: '카드 검색 실패', data: msg });
         }
     })
+});
+
+/* DELETE card listing. */
+router.delete('/:card_id', function(req, res, next) {
+    var Card = require('../models/card.js');
+    var data = {
+        'card_id': req.params.card_id
+    };
+
+    Card.deleteById(data, function(status, msg) {
+        if(status) {
+            res.send({ status: true, msg: '카드 삭제 성공', data: msg });
+        } else {
+            res.send({ status: false, msg: '카드 삭제 실패', data: msg });
+        }
+    })
+});
+
+/* POST card listing. */
+router.put('/:card_id', function(req, res, next) {
+    // login check
+    if (!req.session.userinfo.isLogin) {
+        res.send({ status: false, msg: '로그인이 필요합니다.' });
+    } else {
+        var Card = require('../models/card.js');
+
+        Card.getById({'card_id': req.params.card_id}, function (status, msg) {
+            if(status) {
+                if(msg)
+                if(msg.author == req.session.userinfo.username) {
+                    var data = {
+                        'card_id': req.params.card_id,
+                        'imageA': req.body.imageA,
+                        'imageB': req.body.imageB,
+                        'title': req.body.title,
+                    };
+
+                    Card.putById(data, function (status, msg) {
+                        if (status) {
+                            // TODO mypage로 리다이렉트
+                            // update 결과가 바뀌기 전 문장이 나오기 때문에 다시 불러옴
+                            Card.getById({'card_id': req.params.card_id}, function (status, msg) {
+                                if (status) {
+                                    res.send({ status: true, msg: '게시 완료', data: msg });
+                                } else res.send({ status: false, msg: '게시 실패', data: msg })
+                            });
+                        } else {
+                            res.send({ status: false, msg: '게시 실패', data: msg });
+                        }
+                    });
+                } else res.send({ status: false, msg: '게시 실패', data: '권한이 없습니다' });
+                else res.send({ status: false, msg: '게시 실패', data: '게시물이 없습니다' });
+            } else res.send({ status: false, msg: '게시 실패', data: msg });
+        });
+    }
 });
 
 /* POST choose card */
 router.post('/choose/:card_id/:image_id', function(req, res, next) {
     // login check
     if (!req.session.userinfo.isLogin) {
-        res.send('로그인이 필요합니다.');
+        res.send({ status: false, msg: '로그인이 필요합니다.' });
     } else {
         var Card = require('../models/card.js');
 
@@ -160,9 +206,9 @@ router.post('/choose/:card_id/:image_id', function(req, res, next) {
 
         Card.postLikeCard(data, function(status, msg) {
             if (status)
-                res.send('좋아요 누름 : '+msg);
+                res.send({ status: true, msg: '좋아요 누름', data: msg });
             else
-                res.send('에러 : '+msg);
+                res.send({ status: false, msg: '에러', data: msg });
         });
     }
 });
@@ -171,7 +217,7 @@ router.post('/choose/:card_id/:image_id', function(req, res, next) {
 router.post('/vote/:card_id/:image_id', function(req, res, next) {
     // login check
     if (!req.session.userinfo.isLogin) {
-        res.send('로그인이 필요합니다.');
+        res.send({ status: false, msg: '로그인이 필요합니다.' });
     } else {
         var Card = require('../models/card.js');
 
@@ -184,11 +230,8 @@ router.post('/vote/:card_id/:image_id', function(req, res, next) {
         };
 
         Card.postVoteCard(data, function(status, msg) {
-            if (status) console.log('성공');
-            else console.log('에러');
-
-            //console.log(msg);
-            res.send('Vote 작성 : '+msg);
+            if (status) res.send({ status: true, msg: 'text vote 작성', data: msg });
+            else res.send({ status: true, msg: 'text vote 작성 실패', data: msg });
         });
     }
 });
@@ -197,7 +240,7 @@ router.post('/vote/:card_id/:image_id', function(req, res, next) {
 router.put('/vote/:card_id/:image_id', function(req, res, next) {
     // login check
     if (!req.session.userinfo.isLogin) {
-        res.send('로그인이 필요합니다.');
+        res.send({ status: false, msg: '로그인이 필요합니다.' });
     } else {
         var Card = require('../models/card.js');
 
@@ -210,11 +253,8 @@ router.put('/vote/:card_id/:image_id', function(req, res, next) {
         };
 
         Card.putVoteLike(data, function(status, msg) {
-            if (status) console.log('성공');
-            else console.log('에러');
-
-            //console.log(msg);
-            res.send('Vote 누름 : '+msg);
+            if (status) res.send({ status: true, msg: 'text vote 투표', data: msg });
+            else res.send({ status: true, msg: 'text vote 투표 실패', data: msg });
         });
     }
 });

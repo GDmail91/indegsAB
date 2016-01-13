@@ -62,6 +62,19 @@ cardSchema.statics.getById = function(data, callback) {
     });
 };
 
+// delete card by id
+cardSchema.statics.deleteById = function(data, callback) {
+    Card.findById(data.card_id).remove(function(err, result) {
+        callback(true, result);
+    });
+};
+
+// put card by id
+cardSchema.statics.putById = function(data, callback) {
+    Card.findOneAndUpdate({ _id: data.card_id }, { imageA: data.imageA, imageB: data.imageB, title: data.title }, function(err, result) {
+        callback(true, result);
+    });
+};
 
 // choose card
 cardSchema.statics.postLikeCard = function(data, callback) {
