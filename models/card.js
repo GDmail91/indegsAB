@@ -122,6 +122,27 @@ cardSchema.statics.postLikeCard = function(data, callback) {
     });
 };
 
+// get text vote in a image
+cardSchema.statics.getVote = function(data, callback) {
+    var Image = require('./image');
+    Image.getById({ image_id: data.image_id }, function(status, image) {
+        if (status) {
+            // 같은글이 올라가있는 경우
+            var hasImage = image.text_vote.filter(function(text_vote) {
+                return text_vote.vote_title == data.vote_title;
+            });
+
+            if(hasImage.length == 0) {
+                callback(false, 'Not exist');
+            } else {
+                callback(true, hasImage.pop());
+            }
+
+        } else {
+            callback(false, image);
+        }
+    });
+};
 
 // create text vote
 cardSchema.statics.postVoteCard = function(data, callback) {
@@ -138,15 +159,29 @@ cardSchema.statics.postVoteCard = function(data, callback) {
                     var liker = image.text_vote;
 
                     // 같은글이 올라가있는 경우
-                    if (image.text_vote[data.vote_title]) callback(false, 'Already posted');
-                    else {
-                        liker.push({ vote_title: data.vote_title, vote_owner: data.username, vote_count: 1, vote_member: [data.username] });
+                    var hasImage = image.text_vote.filter(function(text_vote) {
+                        return text_vote.vote_title == data.vote_title;
+                    });
 
-                        Image.findOneAndUpdate({ _id: data.image_id }, { text_vote: liker }, { upsert: true, new: true}, function(err, result) {
+                    if(hasImage.length == 0) {
+                        liker.push({
+                            vote_title: data.vote_title,
+                            vote_owner: data.username,
+                            vote_count: 1,
+                            vote_member: [data.username]
+                        });
+
+                        Image.findOneAndUpdate({_id: data.image_id}, {text_vote: liker}, {
+                            upsert: true,
+                            new: true
+                        }, function (err, result) {
                             if (err) callback(err);
                             else callback(true, result);
                         });
+                    } else {
+                        callback(false, 'Already voted');
                     }
+
                 } else {
                     callback(false, image);
                 }
@@ -170,27 +205,30 @@ cardSchema.statics.putVoteLike = function(data, callback) {
             Image.getById({ image_id: data.image_id }, function(status, image) {
                 if (status) {
                     // 해당이름의 Vote 검색
-                    image.text_vote.filter(function(text_vote) {
-                        if(text_vote.vote_title == data.vote_title) {
-                            // 투표 눌렀는지 확인
-                            if(text_vote.vote_member == data.username) {
-                                // 눌렀을경우 투표 취소
-                                text_vote.vote_member.pop(data.username);
-                                text_vote.vote_count -= 1;
-                            } else {
-                                // 안눌렀을 경우 투표
-                                text_vote.vote_member.push(data.username);
-                                text_vote.vote_count += 1;
-                            }
-
-                            Image.findOneAndUpdate({ _id: data.image_id }, { text_vote: text_vote }, { upsert: true, new: true}, function(err, result) {
-                                if (err) callback(err);
-                                else callback(true, result);
-                            });
-                        } else {
-                            callback(false, 'Vote title isn`t exist');
-                        }
+                    var result = image.text_vote.filter(function(text_vote) {
+                        return text_vote.vote_title == data.vote_title;
                     });
+                    if(result.length == 0) {
+                        callback(false, 'Vote title isn`t exist');
+                    } else {
+                        console.log(result[0]);
+                        // 투표 눌렀는지 확인
+                        if(result[0].vote_member == data.username) {
+                            // 눌렀을경우 투표 취소
+                            var pos = result[0].vote_member.indexOf(data.username);
+                            result[0].vote_member.splice(pos, 1);
+                            result[0].vote_count -= 1;
+                        } else {
+                            // 안눌렀을 경우 투표
+                            result[0].vote_member.push(data.username);
+                            result[0].vote_count += 1;
+                        }
+
+                        Image.findOneAndUpdate({ _id: data.image_id }, { text_vote: result }, { upsert: true, new: true}, function(err, result) {
+                            if (err) callback(err);
+                            else callback(true, result);
+                        });
+                    }
                 } else {
                     callback(false, image);
                 }

@@ -28,7 +28,7 @@ router.get('/', function(req, res, next) {
 /* POST image listing. */
 router.post('/:card_id/images', function(req, res, next) {
     // login check
-    if (!req.session.userinfo.isLogin) {
+    if (!req.session.isLogin) {
         res.send({ status: false, msg: '로그인이 필요합니다.' });
     } else {
         var AWS = require('aws-sdk');
@@ -92,7 +92,7 @@ router.post('/:card_id/images', function(req, res, next) {
 /* POST card listing. */
 router.post('/', function(req, res, next) {
     // login check
-    if (!req.session.userinfo.isLogin) {
+    if (!req.session.isLogin) {
         res.send({ status: false, msg: '로그인이 필요합니다.' });
     } else {
         var Card = require('../models/card.js');
@@ -153,7 +153,7 @@ router.delete('/:card_id', function(req, res, next) {
 /* POST card listing. */
 router.put('/:card_id', function(req, res, next) {
     // login check
-    if (!req.session.userinfo.isLogin) {
+    if (!req.session.isLogin) {
         res.send({ status: false, msg: '로그인이 필요합니다.' });
     } else {
         var Card = require('../models/card.js');
@@ -192,7 +192,7 @@ router.put('/:card_id', function(req, res, next) {
 /* POST choose card */
 router.post('/choose/:card_id/:image_id', function(req, res, next) {
     // login check
-    if (!req.session.userinfo.isLogin) {
+    if (!req.session.isLogin) {
         res.send({ status: false, msg: '로그인이 필요합니다.' });
     } else {
         var Card = require('../models/card.js');
@@ -216,7 +216,7 @@ router.post('/choose/:card_id/:image_id', function(req, res, next) {
 /* POST new vote card */
 router.post('/vote/:card_id/:image_id', function(req, res, next) {
     // login check
-    if (!req.session.userinfo.isLogin) {
+    if (!req.session.isLogin) {
         res.send({ status: false, msg: '로그인이 필요합니다.' });
     } else {
         var Card = require('../models/card.js');
@@ -230,8 +230,14 @@ router.post('/vote/:card_id/:image_id', function(req, res, next) {
         };
 
         Card.postVoteCard(data, function(status, msg) {
-            if (status) res.send({ status: true, msg: 'text vote 작성', data: msg });
-            else res.send({ status: true, msg: 'text vote 작성 실패', data: msg });
+            if (status) {
+                Card.getVote(data, function(status, msg) {
+                    if (status) {
+                        res.send({ status: true, msg: 'text vote 작성', data: msg });
+                    } else {
+                        res.send({ status: false, msg: 'text vote 가져오기 실패', data: msg });
+                    }}) ;
+            } else res.send({ status: false, msg: 'text vote 작성 실패', data: msg });
         });
     }
 });
@@ -239,7 +245,7 @@ router.post('/vote/:card_id/:image_id', function(req, res, next) {
 /* PUT vote card */
 router.put('/vote/:card_id/:image_id', function(req, res, next) {
     // login check
-    if (!req.session.userinfo.isLogin) {
+    if (!req.session.isLogin) {
         res.send({ status: false, msg: '로그인이 필요합니다.' });
     } else {
         var Card = require('../models/card.js');
@@ -253,8 +259,16 @@ router.put('/vote/:card_id/:image_id', function(req, res, next) {
         };
 
         Card.putVoteLike(data, function(status, msg) {
-            if (status) res.send({ status: true, msg: 'text vote 투표', data: msg });
-            else res.send({ status: true, msg: 'text vote 투표 실패', data: msg });
+            console.log('여기');
+            if (status) {
+                Card.getVote(data, function(status, msg) {
+                    if (status) {
+                        res.send({ status: true, msg: 'text vote 투표', data: msg });
+                    } else {
+                        res.send({ status: false, msg: 'text vote 가져오기 실패', data: msg });
+                    }
+                }) ;
+            } else res.send({ status: false, msg: 'text vote 투표 실패', data: msg });
         });
     }
 });

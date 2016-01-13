@@ -112,8 +112,8 @@ router.post('/login', function(req, res, next) {
             // Email check
             var crypto = require('crypto');
             if (result.pw == crypto.createHash("sha512").update(req.body.pw+result.salt).digest("hex")) {
+                req.session.isLogin = true;
                 req.session.userinfo = {
-                    isLogin: true,
                     username: result.username,
                     useremail: result.email
                 };
@@ -131,6 +131,7 @@ router.post('/login', function(req, res, next) {
 
 /* POST logout listing. */
 router.post('/logout', function(req, res, next) {
+    req.session.isLogin = false;
     req.session.userinfo = {};
     res.send({ status: true, msg: '로그아웃 완료' });
 });
