@@ -211,7 +211,6 @@ cardSchema.statics.putVoteLike = function(data, callback) {
                     if(result.length == 0) {
                         callback(false, 'Vote title isn`t exist');
                     } else {
-                        console.log(result[0]);
                         // 투표 눌렀는지 확인
                         if(result[0].vote_member == data.username) {
                             // 눌렀을경우 투표 취소

@@ -206,7 +206,7 @@ router.post('/choose/:card_id/:image_id', function(req, res, next) {
 
         Card.postLikeCard(data, function(status, msg) {
             if (status)
-                res.send({ status: true, msg: '좋아요 누름', data: msg });
+                res.send({ status: true, msg: '좋아요 누름', data: {like: msg.like, liker: msg.liker } });
             else
                 res.send({ status: false, msg: '에러', data: msg });
         });
@@ -259,7 +259,6 @@ router.put('/vote/:card_id/:image_id', function(req, res, next) {
         };
 
         Card.putVoteLike(data, function(status, msg) {
-            console.log('여기');
             if (status) {
                 Card.getVote(data, function(status, msg) {
                     if (status) {
