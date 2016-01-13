@@ -95,6 +95,14 @@ userSchema.statics.joinCheck = function(data, done) {
     );
 };
 
+userSchema.statics.updateUser = function(data, callback) {
+    // user update process
+    User.findOneAndUpdate({ useremail: data.useremail }, { gender: data.gender, age: data.age, job: data.job, profile: data.profile }, { upsert: true, new: true}, function(err, result) {
+        if (err) callback(err);
+        else callback(true, result);
+    });
+};
+
 var User = mongoose.model('User', userSchema);
 
 

@@ -88,8 +88,27 @@ router.get('/update', function(req, res, next) {
 
 // TODO 회원정보 수정
 /* PUT update listing */
-router.put('/update', function(req, res, next) {
-    res.render('auth/update', { title: 'Update Page' });
+router.put('/', function(req, res, next) {
+    // login check
+    if (!req.session.isLogin) {
+        res.send({ status: false, msg: '로그인이 필요합니다.' });
+    } else {
+        var User = require('../models/user.js');
+        var data = {
+            useremail: req.session.userinfo.useremail,
+            username: req.session.userinfo.username,
+            gender: req.body.gender,
+            age: req.body.age,
+            job: req.body.job,
+            profile: req.body.profile
+        };
+
+        User.updateUser(data, function (status, msg) {
+            if (status) {
+                res.send({status: true, msg: '정보 수정 성공', data: msg});
+            } else res.send({status: false, msg: '정보 수정 실패', data: msg});
+        });
+    }
 });
 
 /* GET login listing. */
