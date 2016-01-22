@@ -137,7 +137,7 @@ router.post('/login', function(req, res, next) {
                     useremail: result.email
                 };
                 // TODO redirecting
-                res.send({ status: true, msg: '로그인 성공', data: result.email });
+                res.send({ status: true, msg: '로그인 성공', data: { email: result.email, username: result.username }});
             } else {
                 res.send({ status: false, msg: '로그인 실패', data: '비밀번호 오류' });
             }
