@@ -28,7 +28,7 @@ router.get('/', function(req, res, next) {
 /* POST image listing. */
 router.post('/:card_id/images', function(req, res, next) {
     // login check
-    if (!req.session.isLogin) {
+    if (!req.mySession.isLogin) {
         res.send({ status: false, msg: '로그인이 필요합니다.' });
     } else {
         var AWS = require('aws-sdk');
@@ -91,6 +91,9 @@ router.post('/:card_id/images', function(req, res, next) {
 
 /* POST card listing. */
 router.post('/', function(req, res, next) {
+    var mySession = JSON.parse(req.cookies.mySession);
+    req.session.isLogin = mySession.isLogin;
+    req.session.userinfo = mySession.userinfo;
     // login check
     if (!req.session.isLogin) {
         res.send({ status: false, msg: '로그인이 필요합니다.' });

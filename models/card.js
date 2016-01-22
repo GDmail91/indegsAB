@@ -49,9 +49,9 @@ cardSchema.statics.postCard = function(data, callback) {
         title: data.title,
         useremail: data.useremail,
         author: data.author
-    }).save(function(err) {
+    }).save(function(err, card) {
         if (err) callback(false, err);
-        else callback(true, 'success');
+        else callback(true, card.id);
     });
 };
 

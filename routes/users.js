@@ -131,11 +131,6 @@ router.post('/login', function(req, res, next) {
             // Email check
             var crypto = require('crypto');
             if (result.pw == crypto.createHash("sha512").update(req.body.pw+result.salt).digest("hex")) {
-                req.session.isLogin = true;
-                req.session.userinfo = {
-                    username: result.username,
-                    useremail: result.email
-                };
                 // TODO redirecting
                 res.send({ status: true, msg: '로그인 성공', data: { email: result.email, username: result.username }});
             } else {
