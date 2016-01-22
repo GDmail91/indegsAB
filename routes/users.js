@@ -44,7 +44,7 @@ router.post('/join', function(req, res, next) {
         'email': req.body.email,
         'pw': req.body.pw,
         'pw_confirm': req.body.pw_confirm,
-        'username': req.body.name,
+        'username': req.body.username,
         'age': req.body.age,
         'gender': req.body.gender
     };
@@ -54,7 +54,7 @@ router.post('/join', function(req, res, next) {
     if(Validator.isEmail(data.email)  // email check
         && Validator.equals(data.pw, data.pw_confirm) // password confirm
         && Validator.isNumeric(data.age)  // number only
-        && Validator.isAlpha(data.username)  // charator only
+        && Validator.isAlphanumeric(data.username)  // charator only
         && (Validator.equals(data.gender, 'male') || Validator.equals(data.gender, 'female'))) {
 
         // Email registration
@@ -72,7 +72,7 @@ router.post('/join', function(req, res, next) {
         console.log('유효성 검사 실패.');
         console.log('이메일: '+Validator.isEmail(data.email));
         console.log('비번: '+Validator.equals(data.pw, data.pw_confirm));
-        console.log('이름: '+Validator.isNumeric(data.username));
+        console.log('이름: '+Validator.isAlphanumeric(data.username));
         console.log('나이: '+Validator.isNumeric(data.age));
         console.log('성별: '+(Validator.equals(data.gender, 'male') || Validator.equals(data.gender, 'female')));
 

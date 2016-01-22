@@ -150,7 +150,7 @@ router.delete('/:card_id', function(req, res, next) {
     })
 });
 
-/* POST card listing. */
+/* PUT card listing. */
 router.put('/:card_id', function(req, res, next) {
     // login check
     if (!req.session.isLogin) {
