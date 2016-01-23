@@ -20,9 +20,9 @@ router.get('/:image_id', function(req, res, next) {
 
     Image.getById(data, function(status, msg) {
         if(status) {
-            res.send({ status: true, msg: '카드 불러오기 성공', data: msg });
+            res.send({ status: true, msg: '이미지 불러오기 성공', data: msg });
         } else {
-            res.send({ status: false, msg: '카드 검색 실패', data: msg });
+            res.send({ status: false, msg: '이미지 검색 실패', data: msg });
         }
     })
 });

@@ -33,7 +33,6 @@ imageSchema.statics.getById = function(data, callback) {
 imageSchema.statics.postImage = function(data, callback) {
     new Image({
         image_url: data.image_url,
-        linked_card: data.card_id,
         author: data.author,
     }).save(function(err, result) {
         if (err) callback(false, err);

@@ -26,7 +26,7 @@ router.get('/', function(req, res, next) {
 });
 
 /* POST image listing. */
-router.post('/:card_id/images', function(req, res, next) {
+router.post('/images', function(req, res, next) {
     // login check
     if (!req.mySession.isLogin) {
         res.send({ status: false, msg: '로그인이 필요합니다.' });
@@ -74,7 +74,6 @@ router.post('/:card_id/images', function(req, res, next) {
 
                     var data = {
                         image_url: keyName,
-                        linked_card: req.params.card_id,
                         author: req.session.userinfo.username,
                     };
                     Image.postImage(data, function(status, msg) {
@@ -110,9 +109,21 @@ router.post('/', function(req, res, next) {
 
         Card.postCard(data, function (status, msg) {
             if (status) {
-                console.log('게시 완료');
-                // TODO mypage로 리다이렉트
-                res.send({ status: true, msg: '게시 완료', data: msg });
+                var Image = require('../models/image.js');
+
+                var data = { linked_card: msg };
+                console.log(msg);
+
+                Image.linkCard(data, function (status, msg) {
+                    if(status) {
+                        console.log('게시 완료');
+                        // TODO mypage로 리다이렉트
+                        res.send({ status: true, msg: '게시 완료', data: msg });
+                    } else {
+                        console.log(msg);
+                        res.send({ status: false, msg: '게시 실패', data: msg });
+                    }
+                });
             } else {
                 console.log(msg);
                 res.send({ status: false, msg: '게시 실패', data: msg });
