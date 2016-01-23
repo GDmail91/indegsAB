@@ -27,16 +27,18 @@ router.get('/', function(req, res, next) {
 
 /* POST image listing. */
 router.post('/images', function(req, res, next) {
+
+    var session = JSON.parse(req.body.my_session);
+    var files = JSON.parse(req.body.files);
     // login check
-    if (!req.mySession.isLogin) {
+    if (!session.isLogin) {
         res.send({ status: false, msg: '로그인이 필요합니다.' });
     } else {
         var AWS = require('aws-sdk');
-
-        var files = req.body.somefile;
+        var fs = require('fs');
 
         // Read in the file, convert it to base64, store to S3
-        var fileStream = fs.createReadStream(files.path);
+        var fileStream = fs.createReadStream(files.somefile.path);
         fileStream.on('error', function (err) {
             if (err) {
                 throw err;
@@ -49,7 +51,7 @@ router.post('/images', function(req, res, next) {
             // image name hashing
             var crypto = require('crypto');
             var salt = Math.round((new Date().valueOf() * Math.random())) + "";
-            var image_name = crypto.createHash("sha256").update(files.name + salt).digest("hex");
+            var image_name = crypto.createHash("sha256").update(req.body.file_name + salt).digest("hex");
 
             // bucket info & file info
             var bucketName = 'indegs-image-storage';
@@ -67,7 +69,8 @@ router.post('/images', function(req, res, next) {
 
                 var data = {
                     image_url: keyName,
-                    author: req.session.userinfo.username,
+                    author: session.userinfo.username,
+                    file_name: req.body.file_name,
                 };
                 Image.postImage(data, function(status, msg) {
                     if(status) {
@@ -76,6 +79,61 @@ router.post('/images', function(req, res, next) {
                 });
             });
         });
+
+        /*var AWS = require('aws-sdk');
+        var fs = require('fs');
+
+        var formidable = require('formidable');
+
+        // GET FILE info
+        var form = new formidable.IncomingForm();
+        console.log('일단여기');
+        form.parse(req, function(err, fields, files) {
+            if (err) return res.redirect(303, '/error');
+            console.log('여기');
+            // Read in the file, convert it to base64, store to S3
+            var fileStream = fs.createReadStream(files.somefile.path);
+            fileStream.on('error', function (err) {
+                if (err) {
+                    throw err;
+                }
+            });
+            fileStream.on('open', function () {
+                AWS.config.region = 'ap-northeast-2';
+                var s3 = new AWS.S3();
+
+                // image name hashing
+                var crypto = require('crypto');
+                var salt = Math.round((new Date().valueOf() * Math.random())) + "";
+                var image_name = crypto.createHash("sha256").update(req.body.file_name + salt).digest("hex");
+
+                // bucket info & file info
+                var bucketName = 'indegs-image-storage';
+                var keyName = 'images/'+image_name;
+
+                s3.putObject({
+                    Bucket: bucketName,
+                    Key: keyName,
+                    Body: fileStream
+                }, function (err) {
+                    if (err) {
+                        throw err;
+                    }
+                    var Image = require('../models/image.js');
+
+                    var data = {
+                        image_url: keyName,
+                        author: session.userinfo.username,
+                        file_name: req.body.file_name,
+                    };
+                    Image.postImage(data, function(status, msg) {
+                        if(status) {
+                            res.send({ status: true, msg: '업로드 성공', data: msg._id });
+                        } else res.send({ status: false, msg: '업로드 실패' });
+                    });
+                });
+            });
+        });*/
     }
 });
 
