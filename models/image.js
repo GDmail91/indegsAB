@@ -40,6 +40,13 @@ imageSchema.statics.postImage = function(data, callback) {
     });
 };
 
+// put link card
+imageSchema.statics.linkCard = function(data, callback) {
+    Image.findOneAndUpdate({ _id: data.image_id }, { linked_card: data.linked_card }, function(err, result) {
+        callback(true, result);
+    });
+};
+
 //TODO text voting
 // posting card process
 imageSchema.statics.textVote = function(data, callback) {

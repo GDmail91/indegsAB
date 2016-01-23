@@ -79,79 +79,23 @@ router.post('/images', function(req, res, next) {
                 });
             });
         });
-
-        /*var AWS = require('aws-sdk');
-        var fs = require('fs');
-
-        var formidable = require('formidable');
-
-        // GET FILE info
-        var form = new formidable.IncomingForm();
-        console.log('일단여기');
-        form.parse(req, function(err, fields, files) {
-            if (err) return res.redirect(303, '/error');
-            console.log('여기');
-            // Read in the file, convert it to base64, store to S3
-            var fileStream = fs.createReadStream(files.somefile.path);
-            fileStream.on('error', function (err) {
-                if (err) {
-                    throw err;
-                }
-            });
-            fileStream.on('open', function () {
-                AWS.config.region = 'ap-northeast-2';
-                var s3 = new AWS.S3();
-
-                // image name hashing
-                var crypto = require('crypto');
-                var salt = Math.round((new Date().valueOf() * Math.random())) + "";
-                var image_name = crypto.createHash("sha256").update(req.body.file_name + salt).digest("hex");
-
-                // bucket info & file info
-                var bucketName = 'indegs-image-storage';
-                var keyName = 'images/'+image_name;
-
-                s3.putObject({
-                    Bucket: bucketName,
-                    Key: keyName,
-                    Body: fileStream
-                }, function (err) {
-                    if (err) {
-                        throw err;
-                    }
-                    var Image = require('../models/image.js');
-
-                    var data = {
-                        image_url: keyName,
-                        author: session.userinfo.username,
-                        file_name: req.body.file_name,
-                    };
-                    Image.postImage(data, function(status, msg) {
-                        if(status) {
-                            res.send({ status: true, msg: '업로드 성공', data: msg._id });
-                        } else res.send({ status: false, msg: '업로드 실패' });
-                    });
-                });
-            });
-        });*/
     }
 });
 
 
 /* POST card listing. */
 router.post('/', function(req, res, next) {
-    var mySession = JSON.parse(req.cookies.mySession);
-    req.session.isLogin = mySession.isLogin;
-    req.session.userinfo = mySession.userinfo;
+    var session = JSON.parse(req.body.my_session);
+
     // login check
-    if (!req.session.isLogin) {
+    if (!session.isLogin) {
         res.send({ status: false, msg: '로그인이 필요합니다.' });
     } else {
         var Card = require('../models/card.js');
 
         var data = {
-            'useremail': req.session.userinfo.useremail,
-            'author': req.session.userinfo.username,
+            'useremail': session.userinfo.useremail,
+            'author': session.userinfo.username,
             'imageA': req.body.imageA,
             'imageB': req.body.imageB,
             'title': req.body.title,
@@ -168,7 +112,7 @@ router.post('/', function(req, res, next) {
                     if(status) {
                         console.log('게시 완료');
                         // TODO mypage로 리다이렉트
-                        res.send({ status: true, msg: '게시 완료', data: msg });
+                        res.send({ status: true, msg: '게시 완료', data: data.linked_card });
                     } else {
                         console.log(msg);
                         res.send({ status: false, msg: '게시 실패', data: msg });
