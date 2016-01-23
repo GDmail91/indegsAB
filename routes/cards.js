@@ -192,30 +192,6 @@ router.put('/:card_id', function(req, res, next) {
     }
 });
 
-/* POST choose card */
-router.post('/choose/:card_id/:image_id', function(req, res, next) {
-    // login check
-    if (!req.session.isLogin) {
-        res.send({ status: false, msg: '로그인이 필요합니다.' });
-    } else {
-        var Card = require('../models/card.js');
-
-        var data = {
-            'card_id': req.params.card_id,
-            'useremail': req.session.userinfo.useremail,
-            'username': req.session.userinfo.username,
-            'image_id': req.params.image_id
-        };
-
-        Card.postLikeCard(data, function(status, msg) {
-            if (status)
-                res.send({ status: true, msg: '좋아요 누름', data: {like: msg.like, liker: msg.liker } });
-            else
-                res.send({ status: false, msg: '에러', data: msg });
-        });
-    }
-});
-
 /* POST new vote card */
 router.post('/vote/:card_id/:image_id', function(req, res, next) {
     // login check
