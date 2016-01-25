@@ -29,55 +29,16 @@ router.get('/', function(req, res, next) {
 router.post('/images', function(req, res, next) {
 
     var session = JSON.parse(req.body.my_session);
-    var files = JSON.parse(req.body.files);
     // login check
     if (!session.isLogin) {
         res.send({ status: false, msg: '로그인이 필요합니다.' });
     } else {
-        var AWS = require('aws-sdk');
-        var fs = require('fs');
+        var Image = require('../models/image.js');
 
-        // Read in the file, convert it to base64, store to S3
-        var fileStream = fs.createReadStream(files.somefile.path);
-        fileStream.on('error', function (err) {
-            if (err) {
-                throw err;
-            }
-        });
-        fileStream.on('open', function () {
-            AWS.config.region = 'ap-northeast-2';
-            var s3 = new AWS.S3();
-
-            // image name hashing
-            var crypto = require('crypto');
-            var salt = Math.round((new Date().valueOf() * Math.random())) + "";
-            var image_name = crypto.createHash("sha256").update(req.body.file_name + salt).digest("hex");
-
-            // bucket info & file info
-            var bucketName = 'indegs-image-storage';
-            var keyName = 'images/'+image_name;
-
-            s3.putObject({
-                Bucket: bucketName,
-                Key: keyName,
-                Body: fileStream
-            }, function (err) {
-                if (err) {
-                    throw err;
-                }
-                var Image = require('../models/image.js');
-
-                var data = {
-                    image_url: keyName,
-                    author: session.userinfo.username,
-                    file_name: req.body.file_name,
-                };
-                Image.postImage(data, function(status, msg) {
-                    if(status) {
-                        res.send({ status: true, msg: '업로드 성공', data: msg._id });
-                    } else res.send({ status: false, msg: '업로드 실패' });
-                });
-            });
+        Image.postImage(JSON.parse(req.body.data), function(status, msg) {
+            if(status) {
+                res.send({ status: true, msg: '업로드 성공', data: msg._id });
+            } else res.send({ status: false, msg: '업로드 실패' });
         });
     }
 });
@@ -106,7 +67,6 @@ router.post('/', function(req, res, next) {
                 var Image = require('../models/image.js');
 
                 var data = { linked_card: msg };
-                console.log(msg);
 
                 Image.linkCard(data, function (status, msg) {
                     if(status) {
@@ -129,13 +89,42 @@ router.post('/', function(req, res, next) {
 /* GET card listing. */
 router.get('/:card_id', function(req, res, next) {
     var Card = require('../models/card.js');
+    var Image = require('../models/image.js');
     var data = {
         'card_id': req.params.card_id
     };
 
     Card.getById(data, function(status, msg) {
         if(status) {
-            res.send({ status: true, msg: '카드 불러오기 성공', data: msg });
+            var imageA;
+            var imageB;
+            var async = require('async');
+            async.waterfall([
+                    function(callback) {
+                        Image.getById({ 'image_id' : msg.imageA }, function(status, msg) {
+                            imageA = msg;
+                            if (status) return callback(null);
+                            callback(msg);
+                        });
+                    },
+                    function(callback) {
+                        Image.getById({ 'image_id' : msg.imageB }, function(status, msg) {
+                            imageB = msg;
+                            if (status) return callback(null);
+                            callback(msg);
+                        });
+                    },
+                ],
+                function(err, results) {
+                    if (imageA && imageB) {
+                        msg.imageA = JSON.stringify(imageA);
+                        msg.imageB = JSON.stringify(imageB);
+                        console.log(msg);
+                        res.send({ status: true, msg: '카드 불러오기 성공', data: msg });
+                    } else {
+                        res.send({ status: false, msg: '카드 검색 실패', data: msg });
+                    }
+                });
         } else {
             res.send({ status: false, msg: '카드 검색 실패', data: msg });
         }

@@ -1,11 +1,13 @@
 var mongoose = require('mongoose');
 var crypto = require('crypto');
 var autoIncrement = require('mongoose-auto-increment');
+var credentials = require('../credentials');
 
 autoIncrement.initialize(mongoose.connection);
 
 var imageSchema = mongoose.Schema({
     image_url: { type: String, require: true },
+    image_name: {type: String, require: true},
     linked_card: { type: Number, require: true },
     author: { type: String, require: true },
     text_vote: [{
@@ -33,6 +35,7 @@ imageSchema.statics.getById = function(data, callback) {
 imageSchema.statics.postImage = function(data, callback) {
     new Image({
         image_url: data.image_url,
+        image_name: data.image_name,
         author: data.author,
     }).save(function(err, result) {
         if (err) callback(false, err);
@@ -60,6 +63,29 @@ imageSchema.statics.textVote = function(data, callback) {
     });
 };
 
+// get image on the S3
+imageSchema.statics.getImage = function(data, callback) {
+    // TODO duplicated
+
+
+    var AWS = require('aws-sdk');
+    AWS.config.region = 'ap-northeast-2';
+
+    // bucket info & file info
+    var bucketName = 'indegs-image-storage';
+    var keyName = 'images/'+data.file_path;
+    var tempFile = '/public/images/temp/'+data.file_path;
+
+//    var file = require('fs').createWriteStream("."+tempFile);
+
+    var s3 = new AWS.S3();
+    var image = s3.getObject({
+        Bucket: bucketName,
+        Key: keyName,
+    }).createReadStream();
+
+    callback(true, image);
+};
 
 var Image = mongoose.model('Image', imageSchema);
 module.exports = Image;

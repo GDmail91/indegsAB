@@ -12,19 +12,8 @@ router.get('/', function(req, res, next) {
 });
 
 /* GET image listing. */
-router.get('/:image_id', function(req, res, next) {
-    var Image = require('../models/image.js');
-    var data = {
-        'image_id': req.params.image_id
-    };
-
-    Image.getById(data, function(status, msg) {
-        if(status) {
-            res.send({ status: true, msg: '이미지 불러오기 성공', data: msg });
-        } else {
-            res.send({ status: false, msg: '이미지 검색 실패', data: msg });
-        }
-    })
+router.get('/:image_url/:image_name', function(req, res, next) {
+    // TODO duplicated
 });
 
 /* DELETE card listing. */
