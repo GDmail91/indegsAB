@@ -9,7 +9,7 @@ var likeSchema = mongoose.Schema({
 
 // posting like process
 likeSchema.statics.postLike = function(data, callback) {
-    Like.getLike(data, function(status, msg) {
+    Like.getLike({ card_id: data.card_id, image_id: data.image_id, useremail: data.useremail }, function(status, msg) {
        if (status) {
            // 좋아요 취소
            Like.find({ card_id: data.card_id, image_id: data.image_id, useremail: data.useremail }).remove(function(err, data) {

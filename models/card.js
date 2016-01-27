@@ -93,6 +93,7 @@ cardSchema.statics.postLikeCard = function(data, callback) {
                     var liker = [];
                     switch (msg) {
                         case 'plus': // increase process
+                            if (!image.like) image.like=0;
                             image.like += 1;
                             liker = data.username;
                             break;

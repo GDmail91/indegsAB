@@ -9,18 +9,44 @@ var router = express.Router();
 /* GET main card listing. */
 router.get('/', function(req, res, next) {
     var Card = require('../models/card.js');
+    var Image = require('../models/image.js');
 
     // startID, endID
     var data = {
         'startId': req.query.startId,
         'term': req.query.term
     };
-    Card.getMainCard(data, function (status, data) {
+    Card.getMainCard(data, function (status, msg) {
         if (status) {
-            res.send({ status: true, msg: '카드목록 불러오기 성공', data: data });
+            var processed = 0;
+            var resultMsg = msg;
+            msg.forEach(function (val, index, arr) {
+                var async = require('async');
+                async.waterfall([
+                        function (callback) {
+                            Image.getById({'image_id': val.imageA}, function (status, msg) {
+                                resultMsg[index].imageA = JSON.stringify(msg);
+                                if (status) return callback(null);
+                                callback(msg);
+                            });
+                        },
+                        function (callback) {
+                            Image.getById({'image_id': val.imageB}, function (status, msg) {
+                                resultMsg[index].imageB = JSON.stringify(msg);
+                                if (status) return callback(null);
+                                callback(msg);
+                            });
+                        },
+                    ],
+                    function (err, results) {
+                        processed++;
+                        if (processed == msg.length) {
+                            res.send({status: true, msg: '카드목록 불러오기 성공', data: resultMsg});
+                        }
+                    });
+            });
         } else {
-            console.log(data);
-            res.send({ status: false, msg: '카드목록 불러오기 실패', data: data });
+            res.send({ status: false, msg: '카드목록 불러오기 실패', data: resultMsg });
         }
     });
 });
