@@ -206,23 +206,29 @@ cardSchema.statics.putVoteLike = function(data, callback) {
             Image.getById({ image_id: data.image_id }, function(status, image) {
                 if (status) {
                     // 해당이름의 Vote 검색
-                    var result = image.text_vote.filter(function(text_vote) {
+                    var chageVote = image.text_vote.filter(function(text_vote) {
                         return text_vote.vote_title == data.vote_title;
                     });
-                    if(result.length == 0) {
+                    if(chageVote.length == 0) {
                         callback(false, 'Vote title isn`t exist');
                     } else {
+                        console.log(chageVote);
                         // 투표 눌렀는지 확인
-                        if(result[0].vote_member == data.username) {
+                        if(chageVote[0].vote_member == data.username) {
                             // 눌렀을경우 투표 취소
-                            var pos = result[0].vote_member.indexOf(data.username);
-                            result[0].vote_member.splice(pos, 1);
-                            result[0].vote_count -= 1;
+                            var pos = chageVote[0].vote_member.indexOf(data.username);
+                            chageVote[0].vote_member.splice(pos, 1);
+                            chageVote[0].vote_count -= 1;
                         } else {
                             // 안눌렀을 경우 투표
-                            result[0].vote_member.push(data.username);
-                            result[0].vote_count += 1;
+                            chageVote[0].vote_member.push(data.username);
+                            chageVote[0].vote_count += 1;
                         }
+                        console.log(image.text_vote);
+                        image.text_vote[data.vote_title] = chageVote[0];
+                        var result = image.text_vote;
+
+                        console.log(result);
 
                         Image.findOneAndUpdate({ _id: data.image_id }, { text_vote: result }, { upsert: true, new: true}, function(err, result) {
                             if (err) callback(err);

@@ -145,7 +145,7 @@ router.get('/:card_id', function(req, res, next) {
                     if (imageA && imageB) {
                         msg.imageA = JSON.stringify(imageA);
                         msg.imageB = JSON.stringify(imageB);
-                        console.log(msg);
+                        //console.log(msg);
                         res.send({ status: true, msg: '카드 불러오기 성공', data: msg });
                     } else {
                         res.send({ status: false, msg: '카드 검색 실패', data: msg });
@@ -214,17 +214,21 @@ router.put('/:card_id', function(req, res, next) {
 
 /* POST new vote card */
 router.post('/vote/:card_id/:image_id', function(req, res, next) {
+    var session;
+    if (req.session.isLogin) session = req.session;
+    else session = JSON.parse(req.body.my_session);
+
     // login check
-    if (!req.session.isLogin) {
+    if (!session.isLogin) {
         res.send({ status: false, msg: '로그인이 필요합니다.' });
     } else {
         var Card = require('../models/card.js');
 
         var data = {
             'card_id': req.params.card_id,
-            'useremail': req.session.userinfo.useremail,
-            'username': req.session.userinfo.username,
             'image_id': req.params.image_id,
+            'useremail': session.userinfo.useremail,
+            'username': session.userinfo.username,
             'vote_title': req.body.vote_title,
         };
 
@@ -243,16 +247,20 @@ router.post('/vote/:card_id/:image_id', function(req, res, next) {
 
 /* PUT vote card */
 router.put('/vote/:card_id/:image_id', function(req, res, next) {
+    var session;
+    if (req.session.isLogin) session = req.session;
+    else session = JSON.parse(req.body.my_session);
+
     // login check
-    if (!req.session.isLogin) {
+    if (!session.isLogin) {
         res.send({ status: false, msg: '로그인이 필요합니다.' });
     } else {
         var Card = require('../models/card.js');
 
         var data = {
             'card_id': req.params.card_id,
-            'useremail': req.session.userinfo.useremail,
-            'username': req.session.userinfo.username,
+            'useremail': session.userinfo.useremail,
+            'username': session.userinfo.username,
             'image_id': req.params.image_id,
             'vote_title': req.body.vote_title
         };
