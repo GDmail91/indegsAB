@@ -17,7 +17,7 @@ var imageSchema = mongoose.Schema({
         vote_member: [{type: String}]
     }],
     liker: [{type: String}],
-    like : { type: Number },
+    like : { type: Number, default: 0 },
     postDate: { type: Date, default: Date.now },
 });
 

@@ -123,6 +123,39 @@ cardSchema.statics.postLikeCard = function(data, callback) {
     });
 };
 
+cardSchema.statics.compareLike = function (data, callback) {
+    var Image = require('./image');
+    var async = require('async');
+    var imageA, imageB, like;
+    async.waterfall([
+            function(callback) {
+                Image.getById({ 'image_id' : Card.imageA }, function(status, msg) {
+                    imageA = msg;
+                    if (status) return callback(null);
+                    callback(msg);
+                });
+            },
+            function(callback) {
+                Image.getById({ 'image_id' : Card.imageB }, function(status, msg) {
+                    imageB = msg;
+                    if (status) return callback(null);
+                    callback(msg);
+                });
+            },
+        ],
+        function(err, results) {
+            if(imageA > imageB) {
+                like = Card.imageA;
+            } else if(imageB > imageA) {
+                like = Card.imageB;
+            }
+            Card.findOneAndUpdate({ _id: data.card_id }, { like: like }, { upsert: true, new: true}, function(err, result) {
+                if (err) callback(err);
+                else callback(true, result);
+            });
+        });
+};
+
 // get text vote in a image
 cardSchema.statics.getVote = function(data, callback) {
     var Image = require('./image');

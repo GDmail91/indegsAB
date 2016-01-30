@@ -53,8 +53,10 @@ router.get('/', function(req, res, next) {
 
 /* POST image listing. */
 router.post('/images', function(req, res, next) {
+    var session;
+    if (req.session.isLogin) session = req.session;
+    else session = JSON.parse(req.body.my_session);
 
-    var session = JSON.parse(req.body.my_session);
     // login check
     if (!session.isLogin) {
         res.send({ status: false, msg: '로그인이 필요합니다.' });
@@ -72,7 +74,9 @@ router.post('/images', function(req, res, next) {
 
 /* POST card listing. */
 router.post('/', function(req, res, next) {
-    var session = JSON.parse(req.body.my_session);
+    var session;
+    if (req.session.isLogin) session = req.session;
+    else session = JSON.parse(req.body.my_session);
 
     // login check
     if (!session.isLogin) {
@@ -175,8 +179,12 @@ router.delete('/:card_id', function(req, res, next) {
 
 /* PUT card listing. */
 router.put('/:card_id', function(req, res, next) {
+    var session;
+    if (req.session.isLogin) session = req.session;
+    else session = JSON.parse(req.body.my_session);
+
     // login check
-    if (!req.session.isLogin) {
+    if (!session.isLogin) {
         res.send({ status: false, msg: '로그인이 필요합니다.' });
     } else {
         var Card = require('../models/card.js');
@@ -184,7 +192,7 @@ router.put('/:card_id', function(req, res, next) {
         Card.getById({'card_id': req.params.card_id}, function (status, msg) {
             if(status) {
                 if(msg)
-                if(msg.author == req.session.userinfo.username) {
+                if(msg.author == session.userinfo.username) {
                     var data = {
                         'card_id': req.params.card_id,
                         'imageA': req.body.imageA,
