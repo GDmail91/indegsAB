@@ -41,7 +41,6 @@ router.get('/', function(req, res, next) {
                     function (err, results) {
                         processed++;
                         if (processed == msg.length) {
-                            console.log(resultMsg);
                             res.send({status: true, msg: '카드목록 불러오기 성공', data: resultMsg});
                         }
                     });
