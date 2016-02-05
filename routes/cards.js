@@ -25,14 +25,14 @@ router.get('/', function(req, res, next) {
                 async.waterfall([
                         function (callback) {
                             Image.getById({'image_id': val.imageA}, function (status, msg) {
-                                resultMsg[index].imageA = JSON.stringify(msg);
+                                resultMsg[index].imageA = JSON.pares(msg);
                                 if (status) return callback(null);
                                 callback(msg);
                             });
                         },
                         function (callback) {
                             Image.getById({'image_id': val.imageB}, function (status, msg) {
-                                resultMsg[index].imageB = JSON.stringify(msg);
+                                resultMsg[index].imageB = JSON.pares(msg);
                                 if (status) return callback(null);
                                 callback(msg);
                             });
