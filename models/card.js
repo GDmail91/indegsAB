@@ -21,20 +21,27 @@ cardSchema.plugin(autoIncrement.plugin, 'Card');
 // getting main card process
 cardSchema.statics.getMainCard = function(data, callback) {
     // if have 'startId' searching at the id
-    console.log(data.startId);
+    //console.log(data.startId);
     if (data.startId) {
         Card.findById(data.startId, function(err, result) {
             // postDate 기준으로 내림차순 정렬, 상위 5개
-            Card.find({'postDate': {$lt: result.postDate}}).sort({postDate: -1}).limit(5).find(function(err,result){
-                if(err) callback(false, err);
-                else callback(true, result);
-            });
+            if(err || result.length == 0) {
+                callback(false, err);
+            } else {
+                Card.find({'postDate': {$lt: result.postDate}}).sort({postDate: -1}).limit(5).find(function (err, result) {
+                    if (err) callback(false, err);
+                    else callback(true, result);
+                });
+            }
         });
     } else { // if no have 'startId' searching at the recent card
-        console.log('여기 실행');
         // postDate 기준으로 내림차순 정렬, 상위 5개
         Card.find().sort({postDate: -1}).limit(5).find(function(err,result){
-            if(err) callback(false, err);
+            console.log(err);
+            console.log(result);
+            if(err || result.length == 0) {
+                callback(false, err);
+            }
             else callback(true, result);
         });
     }
