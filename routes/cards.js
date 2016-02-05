@@ -19,20 +19,20 @@ router.get('/', function(req, res, next) {
     Card.getMainCard(data, function (status, msg) {
         if (status) {
             var processed = 0;
-            var resultMsg = msg;
+            var resultMsg = JSON.parse(JSON.stringify(msg));
             msg.forEach(function (val, index, arr) {
                 var async = require('async');
                 async.waterfall([
                         function (callback) {
                             Image.getById({'image_id': val.imageA}, function (status, msg) {
-                                resultMsg[index].imageA = JSON.pares(msg);
+                                resultMsg[index].imageA = msg;
                                 if (status) return callback(null);
                                 callback(msg);
                             });
                         },
                         function (callback) {
                             Image.getById({'image_id': val.imageB}, function (status, msg) {
-                                resultMsg[index].imageB = JSON.pares(msg);
+                                resultMsg[index].imageB = msg;
                                 if (status) return callback(null);
                                 callback(msg);
                             });
@@ -41,6 +41,7 @@ router.get('/', function(req, res, next) {
                     function (err, results) {
                         processed++;
                         if (processed == msg.length) {
+                            console.log(resultMsg);
                             res.send({status: true, msg: '카드목록 불러오기 성공', data: resultMsg});
                         }
                     });
