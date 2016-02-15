@@ -32,7 +32,7 @@ router.get('/users', function(req, res, next) {
 /* DELETE user */
 router.delete('/users', function(req, res, next) {
     var data = {
-        'selected_id': req.body.selected_id
+        'selected_id': JSON.parse(req.body.selected_id)
     };
 
     // 컨트롤러 서버인지 확인
