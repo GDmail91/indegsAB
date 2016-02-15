@@ -22,13 +22,14 @@ cardSchema.plugin(autoIncrement.plugin, 'Card');
 cardSchema.statics.getMainCard = function(data, callback) {
     // if have 'startId' searching at the id
     //console.log(data.startId);
+    if (data.term == undefined) data.term = 5;
     if (data.startId) {
         Card.findById(data.startId, function(err, result) {
             // postDate 기준으로 내림차순 정렬, 상위 5개
             if(err || result.length == 0) {
                 callback(false, err);
             } else {
-                Card.find({'postDate': {$lt: result.postDate}}).sort({postDate: -1}).limit(5).find(function (err, result) {
+                Card.find({'postDate': {$lt: result.postDate}}).sort({postDate: -1}).limit(data.term).find(function (err, result) {
                     if (err) callback(false, err);
                     else callback(true, result);
                 });
@@ -36,12 +37,11 @@ cardSchema.statics.getMainCard = function(data, callback) {
         });
     } else { // if no have 'startId' searching at the recent card
         // postDate 기준으로 내림차순 정렬, 상위 5개
-        Card.find().sort({postDate: -1}).limit(5).find(function(err,result){
-            console.log(err);
-            console.log(result);
-            if(err || result.length == 0) {
+        Card.find().sort({postDate: -1}).limit(data.term).find(function(err,result){
+            if(err) {
                 callback(false, err);
             }
+            else if (result.length == 0) callback(false, '데이터가 없습니다.');
             else callback(true, result);
         });
     }
@@ -71,9 +71,33 @@ cardSchema.statics.getById = function(data, callback) {
 
 // delete card by id
 cardSchema.statics.deleteById = function(data, callback) {
-    Card.findById(data.card_id).remove(function(err, result) {
-        callback(true, result);
+    var Image = require('./image');
+    Card.find({ _id: {"$in":data.card_id }}, function (err, result) {
+        var async = require('async');
+        var image_ids = [];
+        var length = 0;
+        result.forEach(function(val,index, arr) {
+            image_ids.push(parseInt(val.imageA));
+            image_ids.push(parseInt(val.imageB));
+            length++;
+            if (length == result.length) {
+                imageRemove(image_ids);
+            }
+        });
+        function imageRemove(image_ids) {
+            Image.find({_id: {"$in": image_ids}}).remove(function(err, result) {
+                console.log(result);
+                if(err) return callback(false, '이미지 삭제중 에러');
+                cardRemove();
+            });
+        }
     });
+    function cardRemove() {
+        console.log('카드 삭제 실행');
+        Card.find({_id: {"$in": data.card_id}}).remove(function (err, result) {
+            callback(true, result);
+        });
+    }
 };
 
 // put card by id
