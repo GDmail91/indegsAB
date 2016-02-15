@@ -18,7 +18,9 @@ router.get('/users', function(req, res, next) {
         return (req.headers['x-forwarded-for'] || '').split(',')[0]
             || req.connection.remoteAddress;
     };
-    if(getClientAddress(req) == '::1' || getClientAddress(req) == '::ffff:127.0.0.1') { // IPv6의 루프백 주소
+    if(getClientAddress(req) == '::1'
+        || getClientAddress(req) == '::ffff:127.0.0.1'
+        || getClientAddress(req) == '::ffff:128.199.75.74') { // IPv6의 루프백 주소
         var User = require('../models/user');
         User.getList(data, function(status, result_data) {
             if (!status) return res.send({ status: false, msg: '에러 발생', data: result_data });
@@ -40,7 +42,9 @@ router.delete('/users', function(req, res, next) {
         return (req.headers['x-forwarded-for'] || '').split(',')[0]
             || req.connection.remoteAddress;
     };
-    if(getClientAddress(req) == '::1' || getClientAddress(req) == '::ffff:127.0.0.1') { // IPv6의 루프백 주소
+    if(getClientAddress(req) == '::1'
+        || getClientAddress(req) == '::ffff:127.0.0.1'
+        || getClientAddress(req) == '::ffff:128.199.75.74') { // IPv6의 루프백 주소
         console.log(data.selected_id);
         data.user_id = data.selected_id;
         var User = require('../models/user');
@@ -66,7 +70,9 @@ router.get('/cards', function(req, res, next) {
         return (req.headers['x-forwarded-for'] || '').split(',')[0]
             || req.connection.remoteAddress;
     };
-    if(getClientAddress(req) == '::1' || getClientAddress(req) == '::ffff:127.0.0.1') { // IPv6의 루프백 주소
+    if(getClientAddress(req) == '::1'
+        || getClientAddress(req) == '::ffff:127.0.0.1'
+        || getClientAddress(req) == '::ffff:128.199.75.74') { // IPv6의 루프백 주소
         var Card = require('../models/card');
         Card.getMainCard(data, function(status, result_data) {
             if (!status) return res.send({ status: false, msg: '에러 발생', data: result_data });
@@ -88,7 +94,9 @@ router.delete('/cards', function(req, res, next) {
         return (req.headers['x-forwarded-for'] || '').split(',')[0]
             || req.connection.remoteAddress;
     };
-    if(getClientAddress(req) == '::1' || getClientAddress(req) == '::ffff:127.0.0.1') { // IPv6의 루프백 주소
+    if(getClientAddress(req) == '::1'
+        || getClientAddress(req) == '::ffff:127.0.0.1'
+        || getClientAddress(req) == '::ffff:128.199.75.74') { // IPv6의 루프백 주소
         data.card_id = data.selected_id;
         var Card = require('../models/card');
         Card.deleteById(data, function(status, result_data) {
@@ -112,7 +120,9 @@ router.get('/images', function(req, res, next) {
         return (req.headers['x-forwarded-for'] || '').split(',')[0]
             || req.connection.remoteAddress;
     };
-    if(getClientAddress(req) == '::1' || getClientAddress(req) == '::ffff:127.0.0.1') { // IPv6의 루프백 주소
+    if(getClientAddress(req) == '::1'
+        || getClientAddress(req) == '::ffff:127.0.0.1'
+        || getClientAddress(req) == '::ffff:128.199.75.74') { // IPv6의 루프백 주소
         var Images = require('../models/image');
         Images.getList(data, function(status, result_data) {
             if (!status) return res.send({ status: false, msg: '에러 발생', data: result_data });
