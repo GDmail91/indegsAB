@@ -287,4 +287,52 @@ router.put('/vote/:card_id/:image_id', function(req, res, next) {
     }
 });
 
+/* GET card by user */
+router.get('/users/:user_id', function(req, res, next) {
+    var data = {
+        'user_id': req.params.user_id,
+        'username': req.query.username
+    };
+    if (req.body.username)
+        data.username = req.body.username;
+
+    // startID, endID
+    data.startId = req.query.startId;
+    data.term = Number(req.query.term);
+
+    // get cards
+    var Card = require('../models/card.js');
+    Card.getByUser(data, function(status, result) {
+        if (!status) return res.send({ status: false, msg: '카드목록 가져오는데 에러 발생', data: result });
+
+        var Image = require('../models/image.js');
+        var async = require('async');
+        var processed = 0;
+        var resultMsg = JSON.parse(JSON.stringify(result));
+        result.forEach(function (val, index, arr) {
+            async.waterfall([
+                function (callback) {
+                    Image.getById({'image_id': val.imageA}, function (status, msg) {
+                        resultMsg[index].imageA = msg;
+                        if (status) return callback(null);
+                        callback(msg);
+                    });
+                },
+                function (callback) {
+                    Image.getById({'image_id': val.imageB}, function (status, msg) {
+                        resultMsg[index].imageB = msg;
+                        if (status) return callback(null);
+                        callback(msg);
+                    });
+                },
+            ], function (err, result) {
+                processed++;
+                if (processed == resultMsg.length) {
+                    res.send({ status: true, msg: '사용자별 카드목록 가져옴', data: resultMsg });
+                }
+            });
+        });
+    });
+});
+
 module.exports = router;

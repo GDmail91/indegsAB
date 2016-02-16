@@ -309,5 +309,32 @@ cardSchema.statics.putVoteLike = function(data, callback) {
     });
 };
 
+// get by user id
+cardSchema.statics.getByUser = function(data, callback) {
+    if (data.term == undefined) data.term = 5;
+    if (data.startId) {
+        Card.findById(data.startId).find({ author: data.username }, function(err, result) {
+            // postDate 기준으로 내림차순 정렬, 상위 5개
+            if(err || result.length == 0) {
+                callback(false, err);
+            } else {
+                Card.find({'postDate': {$lt: result.postDate}}).sort({postDate: -1}).limit(data.term).find(function (err, result) {
+                    if (err) callback(false, err);
+                    else callback(true, result);
+                });
+            }
+        });
+    } else { // if no have 'startId' searching at the recent card
+        // postDate 기준으로 내림차순 정렬, 상위 5개
+        Card.find({ author: data.username }).sort({postDate: -1}).limit(data.term).find(function(err,result){
+            if(err) {
+                callback(false, err);
+            }
+            else if (result.length == 0) callback(false, '데이터가 없습니다.');
+            else callback(true, result);
+        });
+    }
+};
+
 var Card = mongoose.model('Card', cardSchema);
 module.exports = Card;

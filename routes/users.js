@@ -7,25 +7,26 @@ var express = require('express');
 var router = express.Router();
 
 /* GET user listing */
-router.get('/:username', function(req, res, next) {
+router.get('/names', function(req, res, next) {
+    // TODO chage to ID
     var User = require('../models/user.js');
     var data = {
-      'username': req.params.username
+        'username': req.query.username
     };
     User.getByName(data, function(status, data) {
-       if (status) {
-           res.send({ status: true, msg: '사용자 검색 성공', data: data });
-       } else {
-           res.send({ status: false, msg: '사용자 검색 실패', data: data });
-       }
+        if (status) {
+            res.send({ status: true, msg: '사용자 검색 성공', data: data });
+        } else {
+            res.send({ status: false, msg: '사용자 검색 실패', data: data });
+        }
     });
 });
 
 /* GET user by email listing */
-router.get('/:useremail', function(req, res, next) {
+router.get('/emails', function(req, res, next) {
     var User = require('../models/user.js');
     var data = {
-        'useremail': req.params.useremail
+        'useremail': req.query.useremail
     };
     User.getByEmail(data, function(status, data) {
         if (status) {
@@ -50,11 +51,12 @@ router.post('/join', function(req, res, next) {
     };
 
     // validation check
+    var validation = /[a-힣]/;
     var Validator = require('validator');
     if(Validator.isEmail(data.email)  // email check
         && Validator.equals(data.pw, data.pw_confirm) // password confirm
         && Validator.isNumeric(data.age)  // number only
-        && Validator.isAlphanumeric(data.username)  // charator only
+        && validation.test(data.username) // character only
         && (Validator.equals(data.gender, 'male') || Validator.equals(data.gender, 'female'))) {
 
         // Email registration
@@ -72,7 +74,7 @@ router.post('/join', function(req, res, next) {
         console.log('유효성 검사 실패.');
         console.log('이메일: '+Validator.isEmail(data.email));
         console.log('비번: '+Validator.equals(data.pw, data.pw_confirm));
-        console.log('이름: '+Validator.isAlphanumeric(data.username));
+        console.log('이름: '+validation.test(data.username));
         console.log('나이: '+Validator.isNumeric(data.age));
         console.log('성별: '+(Validator.equals(data.gender, 'male') || Validator.equals(data.gender, 'female')));
 
@@ -95,7 +97,7 @@ router.put('/', function(req, res, next) {
     } else {
         var User = require('../models/user.js');
         var data = {
-            useremail: req.session.userinfo.useremail,
+            //useremail: req.session.userinfo.useremail,
             username: req.session.userinfo.username,
             gender: req.body.gender,
             age: req.body.age,
@@ -109,11 +111,6 @@ router.put('/', function(req, res, next) {
             } else res.send({status: false, msg: '정보 수정 실패', data: msg});
         });
     }
-});
-
-/* GET login listing. */
-router.get('/login', function(req, res, next) {
-    res.render('auth/login', { title: 'Login Page' });
 });
 
 /* POST login listing. */
@@ -141,13 +138,6 @@ router.post('/login', function(req, res, next) {
         }
 
     });
-});
-
-/* POST logout listing. */
-router.post('/logout', function(req, res, next) {
-    req.session.isLogin = false;
-    req.session.userinfo = {};
-    res.send({ status: true, msg: '로그아웃 완료' });
 });
 
 module.exports = router;
