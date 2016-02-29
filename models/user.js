@@ -47,7 +47,18 @@ userSchema.statics.getList = function(data, done) {
 userSchema.statics.getByName = function(data, done) {
     User.findOne({'username':data.username}, function(err, result) {
         if (err) {
-            console.err(err);
+            done(false, '사용자 검색 에러');
+        } else {
+            if(result) done(true, result);
+            else done(false, '사용자 없음');
+        }
+    });
+};
+
+// User info getter
+userSchema.statics.getById = function(data, done) {
+    User.findOne({'_id':data.user_id}, function(err, result) {
+        if (err) {
             done(false, '사용자 검색 에러');
         } else {
             if(result) done(true, result);
@@ -60,7 +71,6 @@ userSchema.statics.getByName = function(data, done) {
 userSchema.statics.getByEmail = function(data, done) {
     User.findOne({'useremail':data.useremail}, function(err, result) {
         if (err) {
-            console.err(err);
             done(false, '사용자 검색 에러');
         } else {
             if(result) done(true, result);

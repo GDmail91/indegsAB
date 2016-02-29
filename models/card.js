@@ -9,6 +9,7 @@ var cardSchema = mongoose.Schema({
     imageB: { type: String, require: true },
     title: { type: String, require: true },
     useremail: { type: String, require: true },
+    // author: { type: String, require: true, ref: 'Users' }, Users collection 참조
     author: { type: String, require: true },
     like : { type: Number },
     postDate: { type: Date, default: Date.now },
@@ -29,7 +30,9 @@ cardSchema.statics.getMainCard = function(data, callback) {
             if(err || result.length == 0) {
                 callback(false, err);
             } else {
+                // Card.find({'postDate': {$lt: result.postDate}}).sort({postDate: -1}).limit(data.term).populate('author').exec(function (err, result) { populate 이용 id 연결
                 Card.find({'postDate': {$lt: result.postDate}}).sort({postDate: -1}).limit(data.term).find(function (err, result) {
+                    console.log(result);
                     if (err) callback(false, err);
                     else callback(true, result);
                 });
@@ -37,12 +40,31 @@ cardSchema.statics.getMainCard = function(data, callback) {
         });
     } else { // if no have 'startId' searching at the recent card
         // postDate 기준으로 내림차순 정렬, 상위 5개
+        // Card.find().sort({postDate: -1}).limit(data.term).populate('author').exec(function(err,result){ populate 이용 id 연결
         Card.find().sort({postDate: -1}).limit(data.term).find(function(err,result){
-            if(err) {
-                callback(false, err);
-            }
-            else if (result.length == 0) callback(false, '데이터가 없습니다.');
-            else callback(true, result);
+            if(err) return callback(false, err);
+            if(result.length == 0) return callback(false, '데이터가 없습니다.');
+            var User = require('./user');
+            var length = 1;
+            result.forEach(function(val, index, arr) {
+                User.getById({user_id: val.author}, function(user_result, data) {
+                    if (user_result) {
+                        result[index].author = data.username;
+                        if (length == result.length) callback(true, result);
+                        else length++;
+                    } else {
+                        // TODO duplicated
+                        // ID로 검색이안됬을 경우 이름으로 검색( 추후 삭제)
+                        User.getByName({username: val.author}, function(user_result, data) {
+                            if(user_result) {
+                                result[index].author = data.username;
+                                if (length == result.length) callback(true, result);
+                                else length++;
+                            } else return callback(false, data);
+                        });
+                    }
+                });
+            });
         });
     }
 

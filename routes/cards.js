@@ -86,10 +86,10 @@ router.post('/', function(req, res, next) {
 
         var data = {
             'useremail': session.userinfo.useremail,
-            'author': session.userinfo.username,
+            'author': session.userinfo.user_id,
             'imageA': req.body.imageA,
             'imageB': req.body.imageB,
-            'title': req.body.title,
+            'title': req.body.title
         };
 
         Card.postCard(data, function (status, msg) {
@@ -104,12 +104,10 @@ router.post('/', function(req, res, next) {
                         // TODO mypage로 리다이렉트
                         res.send({ status: true, msg: '게시 완료', data: data.linked_card });
                     } else {
-                        console.log(msg);
                         res.send({ status: false, msg: '게시 실패', data: msg });
                     }
                 });
             } else {
-                console.log(msg);
                 res.send({ status: false, msg: '게시 실패', data: msg });
             }
         });

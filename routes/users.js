@@ -129,7 +129,7 @@ router.post('/login', function(req, res, next) {
             var crypto = require('crypto');
             if (result.pw == crypto.createHash("sha512").update(req.body.pw+result.salt).digest("hex")) {
                 // TODO redirecting
-                res.send({ status: true, msg: '로그인 성공', data: { email: result.email, username: result.username }});
+                res.send({ status: true, msg: '로그인 성공', data: { user_id: result._id, email: result.email, username: result.username }});
             } else {
                 res.send({ status: false, msg: '로그인 실패', data: '비밀번호 오류' });
             }
